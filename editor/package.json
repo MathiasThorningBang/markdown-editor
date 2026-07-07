@@ -1,0 +1,17 @@
+{
+  "name": "markdown-editor-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/geist-mono": "^5.2.8",
+    "@milkdown/crepe": "^7",
+    "@milkdown/utils": "^7"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25"
+  }
+}
