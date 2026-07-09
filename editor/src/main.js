@@ -32,6 +32,7 @@ window.initEditor = async (markdown, baseHref) => {
 
   crepe.on((listener) => {
     listener.markdownUpdated((_ctx, md, prev) => {
+      retagPathCode()
       // Ignore Crepe's initial parse/normalize pass — opening a file must not dirty it.
       if (!ready || suppress || md === prev) return
       window.webkit.messageHandlers.contentChanged.postMessage(md)
@@ -40,6 +41,7 @@ window.initEditor = async (markdown, baseHref) => {
 
   await crepe.create()
   ready = true
+  retagPathCode()
 }
 
 // Called from Swift when the document changes outside the editor (e.g. Revert).
@@ -52,3 +54,39 @@ window.setMarkdown = (markdown) => {
     suppress = false
   }
 }
+
+// Cmd+click on a link or a path-like inline code span opens it externally (handled by Swift).
+const PATH_RE = /^(~\/|\.\.?\/|\/)/
+
+// Tag path-like inline code spans so CSS can show the Cmd-held affordance on them only.
+// Code blocks render via CodeMirror (no <code> element), so this matches inline code only.
+function retagPathCode() {
+  for (const code of document.querySelectorAll('#editor code')) {
+    code.classList.toggle('path-code', PATH_RE.test(code.textContent.trim()))
+  }
+}
+
+// Capture phase: run before ProseMirror's own click handling so we can hijack Cmd+clicks.
+document.addEventListener('click', (e) => {
+  if (!e.metaKey) return
+
+  const link = e.target.closest('a[href]')
+  const code = link ? null : e.target.closest('code')
+  let target = null
+  if (link) {
+    // Raw attribute, not .href — the <base> tag would mangle ~/ paths.
+    target = link.getAttribute('href')
+  } else if (code && PATH_RE.test(code.textContent.trim())) {
+    target = code.textContent.trim()
+  }
+  if (!target) return
+
+  e.preventDefault()
+  e.stopPropagation()
+  window.webkit.messageHandlers.openLink.postMessage(target)
+}, true)
+
+const setCmdHeld = (held) => document.body.classList.toggle('cmd-held', held)
+window.addEventListener('keydown', (e) => { if (e.key === 'Meta') setCmdHeld(true) })
+window.addEventListener('keyup', (e) => { if (e.key === 'Meta') setCmdHeld(false) })
+window.addEventListener('blur', () => setCmdHeld(false))

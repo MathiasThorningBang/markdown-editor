@@ -66,6 +66,15 @@
       color: var(--color-nm-blue);
     }
 
+    /* While Cmd is held, links and path-like inline code show they can be opened (Cmd+click) */
+    body.cmd-held .milkdown a {
+      cursor: pointer;
+    }
+    body.cmd-held .milkdown code.path-code {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     /* Images span the full text container width.
        Crepe's image component sets an inline height (naturalHeight × resize-ratio)
        after load — override it, or object-fit letterboxes the image at natural size. */
