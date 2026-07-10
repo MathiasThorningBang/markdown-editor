@@ -39,7 +39,17 @@ final class SessionModel: ObservableObject {
     func addProject(_ folder: URL) {
         let key = canonical(folder)
         guard !projects.contains(where: { $0.folderURL == key }) else { return }
-        projects.append(Project(folderURL: key, files: FolderScanner.scan(key)))
+        projects.insert(Project(folderURL: key, files: FolderScanner.scan(key)), at: 0)
+        persistProjects()
+    }
+
+    /// Most-recently-opened project goes to the top. Called for opens from
+    /// outside the app (Finder, ⌘O, drag) — sidebar clicks deliberately don't
+    /// reorder, so groups stay put while you browse them.
+    func bumpProject(_ folder: URL) {
+        let key = canonical(folder)
+        guard let index = projects.firstIndex(where: { $0.folderURL == key }), index != 0 else { return }
+        projects.insert(projects.remove(at: index), at: 0)
         persistProjects()
     }
 

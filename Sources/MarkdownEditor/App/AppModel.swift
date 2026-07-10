@@ -21,8 +21,10 @@ final class AppModel: ObservableObject {
         FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
         if isDirectory.boolValue {
             session.addProject(url)
+            session.bumpProject(url)
         } else {
             session.select(url)
+            session.bumpProject(url.deletingLastPathComponent())
         }
         bringWindowFront()
     }
