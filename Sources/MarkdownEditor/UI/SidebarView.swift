@@ -13,6 +13,7 @@ struct SidebarView: View {
                     ForEach(untitledDocs) { doc in
                         SidebarRow(
                             name: doc.displayName,
+                            url: nil,
                             document: doc,
                             isActive: doc === session.activeDoc
                         ) {
@@ -27,6 +28,7 @@ struct SidebarView: View {
                     ForEach(project.files) { file in
                         SidebarRow(
                             name: file.name,
+                            url: file.url,
                             document: session.document(for: file.url),
                             isActive: session.document(for: file.url) === session.activeDoc
                                 && session.activeDoc != nil
@@ -44,6 +46,9 @@ struct SidebarView: View {
                     }
                     .contentShape(Rectangle())
                     .contextMenu {
+                        Button("Kopiér sti") {
+                            AppModel.shared.copyPath(project.folderURL)
+                        }
                         Button("Fjern fra sidebar") {
                             session.removeProject(project.folderURL)
                         }
@@ -61,6 +66,7 @@ struct SidebarView: View {
 
 private struct SidebarRow: View {
     let name: String
+    let url: URL?
     let document: OpenDocument?
     let isActive: Bool
     let action: () -> Void
@@ -80,6 +86,11 @@ private struct SidebarRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if let url {
+                Button("Kopiér sti") { AppModel.shared.copyPath(url) }
+            }
+        }
         .padding(.vertical, 3)
         .padding(.horizontal, 6)
         .background(

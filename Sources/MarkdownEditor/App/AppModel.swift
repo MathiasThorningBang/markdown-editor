@@ -16,15 +16,22 @@ final class AppModel: ObservableObject {
 
     /// Open a markdown file or add a folder as a project.
     func open(_ url: URL) {
-        let url = url.standardizedFileURL
-        var isDirectory: ObjCBool = false
-        FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-        if isDirectory.boolValue {
-            session.addProject(url)
-            session.bumpProject(url)
-        } else {
-            session.select(url)
-            session.bumpProject(url.deletingLastPathComponent())
+        open([url])
+    }
+
+    /// Open several items as one gesture — the window comes forward once.
+    func open(_ urls: [URL]) {
+        for url in urls {
+            let url = url.standardizedFileURL
+            var isDirectory: ObjCBool = false
+            FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+            if isDirectory.boolValue {
+                session.addProject(url)
+                session.bumpProject(url)
+            } else {
+                session.select(url)
+                session.bumpProject(url.deletingLastPathComponent())
+            }
         }
         bringWindowFront()
     }
@@ -35,6 +42,14 @@ final class AppModel: ObservableObject {
         } else {
             showWindow?()
         }
+    }
+
+    /// Puts a file's absolute path on the clipboard (for handing to AI
+    /// agents) and confirms it with a toast.
+    func copyPath(_ url: URL) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url.path, forType: .string)
+        session.showToast("Sti kopieret")
     }
 
     // MARK: - Menu commands

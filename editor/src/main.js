@@ -42,6 +42,8 @@ window.initEditor = async (markdown, baseHref) => {
   await crepe.create()
   ready = true
   retagPathCode()
+  // Swift keeps this web view hidden until the editor has rendered.
+  window.webkit.messageHandlers.editorReady.postMessage(true)
 }
 
 // Called from Swift when the document changes outside the editor (e.g. Revert).

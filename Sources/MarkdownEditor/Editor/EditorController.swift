@@ -7,10 +7,15 @@ import WebKit
 /// (each file keeps its own ProseMirror undo history).
 @MainActor
 final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
-    let webView: WKWebView
+    let webView: EditorWebView
     private let document: OpenDocument
     private let folderURL: URL?
     private let messageProxy = WeakMessageHandler()
+
+    /// True once Crepe has rendered the document. The host keeps the web view
+    /// hidden until then, so switching files never shows a blank editor.
+    private(set) var isReady = false
+    var onReady: (() -> Void)?
 
     init(document: OpenDocument, folderURL: URL?) {
         self.document = document
@@ -23,11 +28,13 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         config.setURLSchemeHandler(LocalFileSchemeHandler(), forURLScheme: "mdfile")
         config.userContentController.add(messageProxy, name: "contentChanged")
         config.userContentController.add(messageProxy, name: "openLink")
-        webView = WKWebView(frame: .zero, configuration: config)
+        config.userContentController.add(messageProxy, name: "editorReady")
+        webView = EditorWebView(frame: .zero, configuration: config)
 
         super.init()
         messageProxy.target = self
         webView.navigationDelegate = self
+        webView.fileURL = { [document] in document.url }
 
         let webDir = Bundle.module.url(forResource: "Web", withExtension: nil)!
         webView.loadFileURL(webDir.appendingPathComponent("editor.html"), allowingReadAccessTo: webDir)
@@ -53,6 +60,10 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         case "openLink":
             guard let target = message.body as? String else { return }
             openLink(target)
+        case "editorReady":
+            isReady = true
+            onReady?()
+            onReady = nil
         default:
             break
         }
@@ -91,6 +102,27 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         let data = try! JSONSerialization.data(withJSONObject: [string])
         let array = String(data: data, encoding: .utf8)!
         return String(array.dropFirst().dropLast())
+    }
+}
+
+/// Web view whose context menu starts with "Kopiér sti" for saved documents —
+/// the quickest way to hand the file's path to an AI agent.
+final class EditorWebView: WKWebView {
+    var fileURL: () -> URL? = { nil }
+
+    override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
+        super.willOpenMenu(menu, with: event)
+        guard let url = fileURL() else { return }
+        let item = NSMenuItem(title: "Kopiér sti", action: #selector(copyPath(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = url
+        menu.insertItem(item, at: 0)
+        menu.insertItem(.separator(), at: 1)
+    }
+
+    @objc private func copyPath(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        AppModel.shared.copyPath(url)
     }
 }
 

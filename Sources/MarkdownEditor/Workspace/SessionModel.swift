@@ -17,6 +17,22 @@ final class SessionModel: ObservableObject {
     @Published private(set) var openDocs: [OpenDocument] = []
     @Published private(set) var activeDoc: OpenDocument?
 
+    let editorPool = EditorPool()
+
+    /// Transient confirmation shown by the main window (e.g. "Sti kopieret").
+    @Published private(set) var toast: String?
+    private var toastTask: Task<Void, Never>?
+
+    func showToast(_ message: String) {
+        toast = message
+        toastTask?.cancel()
+        toastTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.6))
+            guard !Task.isCancelled else { return }
+            self?.toast = nil
+        }
+    }
+
     private static let projectsDefaultsKey = "projectFolders"
 
     weak var window: NSWindow? {
@@ -66,14 +82,20 @@ final class SessionModel: ObservableObject {
         }
         closing.forEach { $0.flush() }
         openDocs.removeAll { doc in closing.contains { $0 === doc } }
+        closing.forEach { editorPool.close($0.id) }
         if let active = activeDoc, closing.contains(where: { $0 === active }) {
             activeDoc = openDocs.last
             updateWindowChrome()
         }
     }
 
+    /// Rescans project folders, publishing only if something actually changed —
+    /// this runs on every window focus, and a wholesale array swap would make
+    /// the sidebar visibly rebuild.
     func refreshFiles() {
-        projects = projects.map { Project(folderURL: $0.folderURL, files: FolderScanner.scan($0.folderURL)) }
+        let rescanned = projects.map { Project(folderURL: $0.folderURL, files: FolderScanner.scan($0.folderURL)) }
+        guard !rescanned.elementsEqual(projects, by: { $0.files == $1.files }) else { return }
+        projects = rescanned
     }
 
     func document(for url: URL) -> OpenDocument? {

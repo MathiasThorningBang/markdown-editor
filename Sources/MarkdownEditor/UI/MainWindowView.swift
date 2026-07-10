@@ -8,25 +8,56 @@ struct MainWindowView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Group {
-            if session.projects.isEmpty && session.openDocs.isEmpty {
-                emptyState
-            } else {
-                NavigationSplitView {
-                    SidebarView(session: session)
-                        .navigationSplitViewColumnWidth(min: 180, ideal: 230, max: 340)
-                } detail: {
-                    if session.activeDoc != nil {
-                        WorkspaceEditorHost(session: session)
-                            .ignoresSafeArea(edges: .bottom)
-                    } else {
+        // The split view (and thereby the editor web views) stays mounted at
+        // all times; empty/placeholder states are overlays. Swapping the
+        // hierarchy itself would visibly rebuild the whole window.
+        ZStack {
+            NavigationSplitView {
+                SidebarView(session: session)
+                    .navigationSplitViewColumnWidth(min: 180, ideal: 230, max: 340)
+            } detail: {
+                ZStack {
+                    WorkspaceEditorHost(session: session)
+                        .ignoresSafeArea(edges: .bottom)
+                    if session.activeDoc == nil {
                         Text("Vælg en fil i sidebaren")
                             .font(.system(size: 16))
                             .foregroundStyle(NMColors.secondaryForeground)
                     }
                 }
+                .toolbar {
+                    if let url = session.activeDoc?.url {
+                        ToolbarItem {
+                            Button {
+                                AppModel.shared.copyPath(url)
+                            } label: {
+                                Label("Kopiér sti", systemImage: "doc.on.clipboard")
+                            }
+                            .help("Kopiér filens sti til udklipsholderen")
+                        }
+                    }
+                }
+            }
+            if session.projects.isEmpty && session.openDocs.isEmpty {
+                emptyState
+                    .background(Color(nsColor: .windowBackgroundColor))
+            }
+            if let toast = session.toast {
+                VStack {
+                    Spacer()
+                    Text(toast)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(NMColors.background)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(NMColors.foreground.opacity(0.92)))
+                        .padding(.bottom, 20)
+                }
+                .transition(.opacity)
+                .allowsHitTesting(false)
             }
         }
+        .animation(.easeInOut(duration: 0.18), value: session.toast)
         .frame(minWidth: 640, minHeight: 400)
         .background(WindowAccessor { window in
             if session.window !== window { session.window = window }

@@ -6,9 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// (With a single Window scene, SwiftUI does not deliver file opens via
     /// onOpenURL — the delegate route is the reliable one.)
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            AppModel.shared.open(url)
-        }
+        AppModel.shared.open(urls)
     }
 
     /// Dock-icon click with the window closed: re-present it.

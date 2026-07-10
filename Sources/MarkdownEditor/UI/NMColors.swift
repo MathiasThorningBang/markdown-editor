@@ -3,6 +3,8 @@ import SwiftUI
 /// NM design tokens mirrored from editor.html's :root — keep the two in sync.
 enum NMColors {
     static let primary = Color(hex: 0xDF475C)
+    static let background = Color(hex: 0xFFFFFF)
+    static let foreground = Color(hex: 0x171717)
     static let mutedForeground = Color(hex: 0xA3A3A3)
     static let secondaryForeground = Color(hex: 0x525252)
 }
