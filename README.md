@@ -1,22 +1,22 @@
 # MarkdownEditor
 
-WYSIWYG-editor til `.md`-filer på macOS, i stil med Typora. Sidebaren samler dine mapper som projekter, filer gemmes automatisk mens du skriver, og Cmd+klik åbner links — også lokale stier. Alt kører lokalt uden netværk.
+WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type, and Cmd+click opens links — including local file paths. Everything runs locally, no network.
 
-Teknisk er det en SwiftUI-app med en bundlet [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe)-editor i en WKWebView. Styling følger NM-designsystemet (DM Sans + Geist Mono).
+Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono).
 
-## Hvorfor en markdown-editor i 2026?
+## Why a markdown editor in 2026?
 
-Fordi mere og mere af mit arbejde ender i markdown, og det er ikke et tilfælde.
+Because more and more of my work ends up in markdown, and that's no accident.
 
-Markdown er det format, AI-agenter taler bedst. De læser og skriver det direkte, og strukturen overlever turen gennem en modelkontekst. Alt det et Office-dokument gør for mennesker med layout, gør markdown for modeller med ren tekst.
+Markdown is the format AI agents speak best. They read and write it directly, and the structure survives the trip through a model context. Everything an Office document does for humans with layout, markdown does for models with plain text.
 
-Det kan også måles. Jeg har testet et bundt rigtige arbejdsfiler (PDF, PowerPoint, Word, Excel) mod den samme viden konverteret til markdown. At lade en model læse de rå filer koster cirka 6 gange så mange tokens, og for billedtunge slide-decks 15-30 gange, fordi hver side sendes som et billede. Den pris betales hver eneste gang filen læses, ikke kun én gang. Samme indhold i markdown giver hurtigere svar og et langt lavere forbrug.
+You can measure it, too. I tested a batch of real work files (PDF, PowerPoint, Word, Excel) against the same knowledge converted to markdown. Having a model read the raw files costs roughly 6x the tokens, and 15-30x for image-heavy slide decks, because every page gets sent as an image. You pay that price every single time the file is read, not once. The same content in markdown means faster answers and far lower usage.
 
-Så agenterne arbejder i `.md`. Problemet er bare, at rå markdown er træls at læse for mennesker. Den her editor findes for at lukke det hul: når en agent skriver briefs eller rapporter i markdown, kan jeg læse med og rette i et pænt dokument i stedet for i kildeteksten. Det er den nemmeste måde, jeg har fundet, at være human in the loop på.
+So the agents work in `.md`. The problem is that raw markdown is a pain for humans to read. This editor exists to close that gap: when an agent writes briefs or reports in markdown, I can read along and make edits in a nice document instead of in the source text. It's the easiest way I've found to stay in the loop.
 
 ## Installation
 
-**Krav:** macOS 14+ og Xcode Command Line Tools (`xcode-select --install`). Node/npm er *ikke* nødvendigt — web-bundlen er committet.
+**Requirements:** macOS 14+ and Xcode Command Line Tools (`xcode-select --install`). Node/npm is *not* needed — the web bundle is committed.
 
 ```sh
 git clone https://github.com/MathiasThorningBang/markdown-editor.git
@@ -24,36 +24,36 @@ cd markdown-editor
 ./build.sh
 ```
 
-Det bygger appen og installerer den i `/Applications/MarkdownEditor.app`.
+This builds the app and installs it to `/Applications/MarkdownEditor.app`.
 
-## Opdatering
+## Updating
 
-Har du appen installeret i forvejen, henter det her seneste version og geninstallerer den:
+If you already have the app installed, this pulls the latest version and reinstalls it:
 
 ```sh
 cd markdown-editor
 git pull && ./build.sh
 ```
 
-Genstart appen bagefter, hvis den kører.
+Restart the app afterwards if it's running.
 
-### Sæt som default-app for .md
+### Set as the default app for .md
 
-Finder → højreklik på en `.md`-fil → **Vis info** → **Åbn med:** MarkdownEditor → **Skift alle…**
+Finder → right-click a `.md` file → **Get Info** → **Open with:** MarkdownEditor → **Change All…**
 
-## Udvikling
+## Development
 
-### Web-editoren (kun ved ændringer i editor/)
+### The web editor (only when changing editor/)
 
 ```sh
 cd editor
 npm install
-npm run build   # bundler til Sources/MarkdownEditor/Web/ (committes)
+npm run build   # bundles into Sources/MarkdownEditor/Web/ (committed)
 ```
 
-### App-ikon
+### App icon
 
-Kilden er `icon/AppIcon-1024.png` (1024×1024 PNG med alpha). Regenerér `AppIcon.icns` med:
+The source is `icon/AppIcon-1024.png` (1024×1024 PNG with alpha). Regenerate `AppIcon.icns` with:
 
 ```sh
 cd icon && mkdir AppIcon.iconset
@@ -64,12 +64,12 @@ done
 iconutil -c icns AppIcon.iconset -o ../AppIcon.icns && rm -rf AppIcon.iconset
 ```
 
-## Kendte tradeoffs
+## Known tradeoffs
 
-- Crepe normaliserer markdown-kilden ved første redigering + gem (lister bliver `*`, tabeller paddes). Indholdet bevares, men git-diffen kan være støjende første gang.
-- Ingen App Sandbox (intern app, ikke App Store) — billeder ved siden af .md-filen læses via et custom `mdfile://`-URL-skema.
-- Ad-hoc-signeret. Gatekeeper kan brokke sig første gang — men da appen bygges lokalt på egen maskine, er det normalt ikke et problem.
+- Crepe normalizes the markdown source on first edit + save (lists become `*`, tables get padded). Content is preserved, but the first git diff can be noisy.
+- No App Sandbox (internal app, not App Store) — images next to the .md file are served through a custom `mdfile://` URL scheme.
+- Ad-hoc signed. Gatekeeper may complain the first time, but since the app is built locally on your own machine, that's rarely an issue.
 
-## Licens
+## License
 
-MIT — fonte (DM Sans, Geist Mono) er under SIL Open Font License via @fontsource.
+MIT — fonts (DM Sans, Geist Mono) are under the SIL Open Font License via @fontsource.
