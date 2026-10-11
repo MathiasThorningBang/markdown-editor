@@ -16,24 +16,26 @@
       --color-border: #e5e5e5;
       --color-nm-blue: #2e7ab5;
 
+      /* Defaults; Swift overrides all three from Indstillinger → Skrifttype */
+      --font-heading: 'DM Sans', system-ui, sans-serif;
       --font-body: 'DM Sans', system-ui, sans-serif;
       --font-mono: 'Geist Mono', monospace;
 
       color-scheme: light dark;
     }
 
-    /* Dark tokens: the same neutral scale, inverted. NM blue is lifted for
-       contrast on the dark background. --color-primary is the user's accent,
-       set from Swift (Indstillinger), so it is not redefined here. */
+    /* Dark tokens, modeled on the Codex app's dark theme: soft #181818
+       background, raised #212121 surfaces. NM blue is lifted for contrast.
+       --color-primary is the user's accent, set from Swift (Indstillinger). */
     @media (prefers-color-scheme: dark) {
       :root {
-        --color-background: #0a0a0a;
-        --color-foreground: #fafafa;
-        --color-card: #171717;
-        --color-muted: #262626;
-        --color-muted-foreground: #737373;
-        --color-secondary-foreground: #a3a3a3;
-        --color-border: #262626;
+        --color-background: #181818;
+        --color-foreground: #ffffff;
+        --color-card: #212121;
+        --color-muted: #2a2a2a;
+        --color-muted-foreground: #8a8a8a;
+        --color-secondary-foreground: #b4b4b4;
+        --color-border: #2e2e2e;
         --color-nm-blue: #5b9bd5;
       }
     }
@@ -55,7 +57,7 @@
 
     /* Map Crepe theme variables to NM tokens */
     .milkdown {
-      --crepe-font-title: var(--font-body);
+      --crepe-font-title: var(--font-heading);
       --crepe-font-default: var(--font-body);
       --crepe-font-code: var(--font-mono);
 
@@ -129,6 +131,9 @@
     }
     .milkdown .milkdown-code-block .cm-editor {
       font-size: 14px;
+    }
+    .milkdown .milkdown-code-block .cm-scroller {
+      font-family: var(--font-mono);
     }
     .milkdown .milkdown-table-block {
       margin: 16px 0;

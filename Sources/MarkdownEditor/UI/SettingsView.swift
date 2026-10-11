@@ -65,12 +65,26 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .padding(.bottom, 16)
+
+                SettingsCard {
+                    SettingsRow("Overskrifter") {
+                        FontPicker(selection: $theme.headingFont, role: .text)
+                    }
+                    Divider()
+                    SettingsRow("Brødtekst") {
+                        FontPicker(selection: $theme.bodyFont, role: .text)
+                    }
+                    Divider()
+                    SettingsRow("Kode") {
+                        FontPicker(selection: $theme.codeFont, role: .code)
+                    }
+                }
 
                 HStack {
                     Spacer()
                     Button("Nulstil til standard") {
-                        theme.appearance = .system
-                        theme.accentHex = AccentPreset.nmRed
+                        theme.resetToDefaults()
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 13))
@@ -96,6 +110,7 @@ private struct SettingsCard<Content: View>: View {
             .padding(.horizontal, 18)
             .background(
                 RoundedRectangle(cornerRadius: 12)
+                    .fill(NMColors.card)
                     .strokeBorder(NMColors.border, lineWidth: 1)
             )
     }
@@ -163,13 +178,13 @@ private struct MiniWindow: View {
     let accent: Color
 
     var body: some View {
-        let bg = Color(hex: dark ? 0x0A0A0A : 0xFFFFFF)
-        let side = Color(hex: dark ? 0x171717 : 0xF5F5F5)
-        let line = Color(hex: dark ? 0x404040 : 0xD4D4D4)
+        let bg = Color(hex: dark ? 0x181818 : 0xFFFFFF)
+        let side = Color(hex: dark ? 0x212121 : 0xF5F5F5)
+        let line = Color(hex: dark ? 0x3A3A3A : 0xD4D4D4)
         HStack(spacing: 0) {
             side.frame(width: 22)
             VStack(alignment: .leading, spacing: 5) {
-                Capsule().fill(dark ? Color(hex: 0xFAFAFA) : Color(hex: 0x171717)).frame(width: 30, height: 4)
+                Capsule().fill(dark ? Color(hex: 0xFFFFFF) : Color(hex: 0x171717)).frame(width: 30, height: 4)
                 Capsule().fill(line).frame(width: 44, height: 3)
                 Capsule().fill(line).frame(width: 38, height: 3)
                 Capsule().fill(accent).frame(width: 20, height: 3)
@@ -219,5 +234,38 @@ private struct HexChip: View {
         .padding(.vertical, 4)
         .background(Capsule().strokeBorder(NMColors.border, lineWidth: 1))
         .help("Vælg din egen farve")
+    }
+}
+
+/// Curated fonts first, then every installed family (fixed-pitch only for code).
+private struct FontPicker: View {
+    @Binding var selection: String
+    let role: FontChoice.Role
+
+    // Scanning installed families is slow-ish; do it once per app run.
+    private static let installedText = FontChoice.installed(.text)
+    private static let installedCode = FontChoice.installed(.code)
+
+    var body: some View {
+        let curated = FontChoice.curated(role)
+        let installed = role == .text ? Self.installedText : Self.installedCode
+        Picker("Skrifttype", selection: $selection) {
+            ForEach(curated) { font in
+                Text(font.name).font(font.previewFont).tag(font.family)
+            }
+            // A saved font that has since been uninstalled still shows as selected.
+            if !curated.contains(where: { $0.family == selection })
+                && !installed.contains(where: { $0.family == selection }) {
+                Text(selection).tag(selection)
+            }
+            Section("Andre skrifttyper") {
+                ForEach(installed) { font in
+                    Text(font.name).font(font.previewFont).tag(font.family)
+                }
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
     }
 }

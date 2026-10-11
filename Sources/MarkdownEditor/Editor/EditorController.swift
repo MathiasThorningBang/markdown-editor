@@ -12,7 +12,7 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     private let document: OpenDocument
     private let folderURL: URL?
     private let messageProxy = WeakMessageHandler()
-    private var accentSubscription: AnyCancellable?
+    private var themeSubscription: AnyCancellable?
 
     /// True once Crepe has rendered the document. The host keeps the web view
     /// hidden until then, so switching files never shows a blank editor.
@@ -37,13 +37,12 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         messageProxy.target = self
         webView.navigationDelegate = self
         webView.fileURL = { [document] in document.url }
-        // Live accent changes from Indstillinger; dark mode needs nothing here —
+        // Live accent and font changes from Indstillinger; dark mode needs nothing here —
         // the web view follows the app appearance via prefers-color-scheme.
-        accentSubscription = ThemeSettings.shared.$accentHex
-            .dropFirst()
+        themeSubscription = ThemeSettings.shared.objectWillChange
             .sink { [weak self] _ in
-                // $accentHex fires before the stored value updates; read it next runloop.
-                DispatchQueue.main.async { self?.applyAccent() }
+                // objectWillChange fires before the stored value updates; read it next runloop.
+                DispatchQueue.main.async { self?.applyTheme() }
             }
 
         let webDir = Bundle.module.url(forResource: "Web", withExtension: nil)!
@@ -51,14 +50,16 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        applyAccent()
+        applyTheme()
         let baseJSON = folderURL.map { jsonString("mdfile://\($0.path)/") } ?? "null"
         webView.evaluateJavaScript("window.initEditor(\(jsonString(document.text)), \(baseJSON))")
     }
 
-    private func applyAccent() {
-        let css = jsonString(ThemeSettings.shared.accentCSS)
-        webView.evaluateJavaScript("document.documentElement.style.setProperty('--color-primary', \(css))")
+    private func applyTheme() {
+        let script = ThemeSettings.shared.cssVariables
+            .map { "s.setProperty(\(jsonString($0.key)), \(jsonString($0.value)));" }
+            .joined()
+        webView.evaluateJavaScript("(s => { \(script) })(document.documentElement.style)")
     }
 
     // Links must never navigate the editor web view itself; Cmd+clicks are opened

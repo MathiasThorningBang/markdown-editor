@@ -5,6 +5,7 @@ import SwiftUI
 /// active file.
 struct SidebarView: View {
     @ObservedObject var session: SessionModel
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         List {
@@ -52,6 +53,8 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
+        .background(colorScheme == .dark ? NMColors.darkSidebar : .clear)
     }
 
     private var untitledDocs: [OpenDocument] {
