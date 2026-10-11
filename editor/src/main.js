@@ -3,6 +3,7 @@ import { replaceAll } from '@milkdown/utils'
 import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
+import { renderPreview, startPreviews } from './preview.js'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
@@ -54,7 +55,14 @@ window.initEditor = async (markdown, baseHref) => {
     root: document.getElementById('editor'),
     defaultValue: markdown,
     featureConfigs: {
-      [Crepe.Feature.CodeMirror]: { theme: codeTheme },
+      [Crepe.Feature.CodeMirror]: {
+        theme: codeTheme,
+        // ```html and ```mermaid blocks show rendered; the toggle reveals the source.
+        renderPreview,
+        previewOnlyByDefault: true,
+        previewToggleText: (previewOnly) => (previewOnly ? 'Redigér' : 'Skjul kode'),
+        previewLabel: 'Visning',
+      },
     },
   })
 
@@ -67,6 +75,7 @@ window.initEditor = async (markdown, baseHref) => {
     })
   })
 
+  startPreviews(document.getElementById('editor'))
   await crepe.create()
   ready = true
   retagPathCode()

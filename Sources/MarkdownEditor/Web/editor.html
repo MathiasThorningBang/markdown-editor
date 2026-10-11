@@ -161,6 +161,27 @@
       background-color: var(--color-border);
     }
 
+    /* Rendered ```html and ```mermaid blocks (editor/src/preview.js) */
+    .milkdown .md-preview-html iframe {
+      display: block;
+      width: 100%;
+      border: 0;
+    }
+    .milkdown .md-preview-mermaid svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+    }
+    .milkdown .md-preview-error {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      white-space: pre-wrap;
+      text-align: left;
+      color: var(--color-secondary-foreground);
+    }
+
     /* Checked task boxes carry the accent */
     .milkdown .milkdown-list-item-block .label.checked svg {
       fill: var(--color-primary);

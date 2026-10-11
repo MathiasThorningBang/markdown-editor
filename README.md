@@ -12,6 +12,14 @@ Open settings with the gear in the toolbar or ⌘, — they open as a page in th
 - **Accent color:** six presets or any color via the macOS color picker. It drives selection, the caret, checked tasks and the active file in the sidebar.
 - **Fonts:** separate choices for headings, body text and code — a short curated list first, then every font installed on your Mac.
 
+## Diagrams, charts and HTML
+
+- ` ```mermaid ` blocks render as diagrams (flowcharts, gantt, sequence, …).
+- ` ```html ` blocks render inline in a sandboxed iframe. Chart.js is built in as `Chart`, and theme colors are available as CSS variables (`--color-primary`, `--color-card`, …) and as `mdTheme` in scripts.
+- `.html` files show up in the sidebar and open as a read-only view that reloads when the file changes on disk.
+
+Everything stays offline: previews and HTML files can't reach the network. See `examples/` for a demo. An agent skill, `md-editor-format`, teaches agents the format.
+
 ## Why a markdown editor in 2026?
 
 Because more and more of my work ends up in markdown, and that's no accident.

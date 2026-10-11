@@ -27,6 +27,9 @@ final class OpenDocument: ObservableObject, Identifiable {
     }
 
     var isDirty: Bool { text != lastSavedText }
+    var isHTML: Bool {
+        url.map { FolderScanner.htmlExtensions.contains($0.pathExtension.lowercased()) } ?? false
+    }
     var displayName: String { url?.lastPathComponent ?? "Uden titel" }
 
     /// Called on every editor change; arms the autosave debounce.

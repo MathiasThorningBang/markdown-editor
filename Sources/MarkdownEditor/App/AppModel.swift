@@ -14,7 +14,7 @@ final class AppModel: ObservableObject {
     /// used to re-present the window after the user closed it.
     var showWindow: (() -> Void)?
 
-    /// Open a markdown file or add a folder as a project.
+    /// Open a markdown/HTML file or add a folder as a project.
     func open(_ url: URL) {
         open([url])
     }
@@ -63,7 +63,7 @@ final class AppModel: ObservableObject {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = true
-        panel.allowedContentTypes = [.markdown]
+        panel.allowedContentTypes = [.markdown, .html]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         open(url)
     }

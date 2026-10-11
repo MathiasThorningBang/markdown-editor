@@ -59,7 +59,10 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         let script = ThemeSettings.shared.cssVariables
             .map { "s.setProperty(\(jsonString($0.key)), \(jsonString($0.value)));" }
             .joined()
-        webView.evaluateJavaScript("(s => { \(script) })(document.documentElement.style)")
+        // themeChanged redraws ```html/```mermaid previews with the new tokens.
+        webView.evaluateJavaScript(
+            "(s => { \(script) })(document.documentElement.style); window.themeChanged?.()"
+        )
     }
 
     // Links must never navigate the editor web view itself; Cmd+clicks are opened
@@ -70,6 +73,8 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        // ```html previews run in iframes; only the editor page itself may talk to Swift.
+        guard message.frameInfo.isMainFrame else { return }
         switch message.name {
         case "contentChanged":
             guard let markdown = message.body as? String else { return }

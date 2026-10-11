@@ -14,12 +14,17 @@ struct FileEntry: Identifiable, Hashable {
 enum FolderScanner {
     /// Matches the extensions declared in Info.plist's UTImportedTypeDeclarations.
     static let markdownExtensions: Set<String> = ["md", "markdown", "mdown"]
+    /// Shown read-only (HTMLViewerController).
+    static let htmlExtensions: Set<String> = ["html", "htm"]
 
     static func scan(_ folder: URL) -> [FileEntry] {
         let contents = (try? FileManager.default.contentsOfDirectory(
             at: folder, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
         return contents
-            .filter { markdownExtensions.contains($0.pathExtension.lowercased()) }
+            .filter {
+                let ext = $0.pathExtension.lowercased()
+                return markdownExtensions.contains(ext) || htmlExtensions.contains(ext)
+            }
             .map(FileEntry.init)
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }

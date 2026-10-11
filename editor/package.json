@@ -10,9 +10,11 @@
     "@codemirror/view": "^6.43.6",
     "@fontsource/dm-sans": "^5.2.8",
     "@fontsource/geist-mono": "^5.2.8",
+    "@lezer/highlight": "^1.2.3",
     "@milkdown/crepe": "^7",
     "@milkdown/utils": "^7",
-    "@lezer/highlight": "^1.2.3"
+    "chart.js": "^4.5.1",
+    "mermaid": "^11.17.2"
   },
   "devDependencies": {
     "esbuild": "^0.25"

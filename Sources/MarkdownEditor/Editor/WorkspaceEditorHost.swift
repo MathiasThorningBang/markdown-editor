@@ -6,16 +6,21 @@ import SwiftUI
 /// back to a file is instant and its undo history survives.
 @MainActor
 final class EditorPool {
-    private(set) var controllers: [UUID: EditorController] = [:]
+    private(set) var controllers: [UUID: any DocumentViewController] = [:]
 
-    func controller(for doc: OpenDocument) -> EditorController {
+    func controller(for doc: OpenDocument) -> any DocumentViewController {
         if let existing = controllers[doc.id] { return existing }
-        // Base resolves relative paths (images, links) against the
-        // document's own folder — projects can live anywhere on disk.
-        let controller = EditorController(
-            document: doc,
-            folderURL: doc.url?.deletingLastPathComponent()
-        )
+        let controller: any DocumentViewController
+        if let url = doc.url, doc.isHTML {
+            controller = HTMLViewerController(url: url)
+        } else {
+            // Base resolves relative paths (images, links) against the
+            // document's own folder — projects can live anywhere on disk.
+            controller = EditorController(
+                document: doc,
+                folderURL: doc.url?.deletingLastPathComponent()
+            )
+        }
         controllers[doc.id] = controller
         return controller
     }
