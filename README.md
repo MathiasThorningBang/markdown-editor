@@ -58,26 +58,36 @@ Restart the app afterwards if it's running.
 Paste this into Claude Code, Codex or another coding agent with terminal access:
 
 ```text
-Update my MarkdownEditor app to the latest version from
+Install or update my MarkdownEditor app to the latest version from
 https://github.com/MathiasThorningBang/markdown-editor.
 
-1. Find my local clone: a folder named markdown-editor containing build.sh and
+1. Check the build tools with swift --version. The app needs the Xcode Command
+   Line Tools with Swift 6 or newer.
+   - If they are missing, run xcode-select --install, tell me to click Install
+     in the dialog that opens, and check swift --version every 30 seconds until
+     it works.
+   - If Swift is older than 6, run softwareupdate --list and find the newest
+     "Command Line Tools" label. Installing it needs my Mac password, so give me
+     the exact command to run in Terminal, sudo softwareupdate --install
+     "<label>", and wait until I say it's done. If no such label is listed,
+     tell me to install the update from System Settings → General → Software
+     Update instead.
+   Check swift --version again and continue only when it reports Swift 6 or
+   newer.
+2. Find my local clone: a folder named markdown-editor containing build.sh and
    Package.swift (look in ~/Desktop, ~/Developer, ~/Documents and ~/code). If
    there is none, clone the repo into ~/Developer/markdown-editor.
-2. Note the current commit, then run git status. The app can reformat files it
+3. Note the current commit, then run git status. The app can reformat files it
    has opened, so if the only changes are in README.md or examples/, discard
    them with git restore. If anything else has changed, stop and show me the
    changes instead of overwriting them.
-3. Switch to the main branch and run git pull.
-4. Run ./build.sh from the repo root. It builds the app and installs it to
-   /Applications/MarkdownEditor.app. If it fails because the Xcode Command Line
-   Tools are missing, tell me to run xcode-select --install and stop. If they
-   are too old (the package needs Swift 6), tell me to update them under System
-   Settings → General → Software Update and stop.
-5. If MarkdownEditor is running, quit it normally (it saves open files on quit)
+4. Switch to the main branch and run git pull.
+5. Run ./build.sh from the repo root. It builds the app and installs it to
+   /Applications/MarkdownEditor.app. If it fails, show me the error and stop.
+6. If MarkdownEditor is running, quit it normally (it saves open files on quit)
    and open it again.
-6. Tell me which commit I'm on now and summarize, in a few plain sentences,
-   what changed since the commit from step 2.
+7. Tell me which commit I'm on now and summarize, in a few plain sentences,
+   what changed since the commit from step 3.
 ```
 
 ### Set as the default app for .md
