@@ -30,6 +30,9 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
 
 * Swift only accepts script messages from the main frame.
 
+* `skills/md-editor-format/SKILL.md` tells agents what the app renders and how to
+  open files in it. Update it when previews or agent features change.
+
 * Open files sync with disk: `SessionModel` checks each file's modification date
   once a second. Clean docs reload (`window.setMarkdown`), dirty ones ask.
   `OpenDocument.flush()` never writes over a file that changed or vanished.

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 struct Project: Identifiable {
@@ -31,6 +32,7 @@ final class SessionModel: ObservableObject {
     /// Transient confirmation shown by the main window (e.g. "Path copied").
     @Published private(set) var toast: String?
     private var toastTask: Task<Void, Never>?
+    private var statsSubscription: AnyCancellable?
 
     func showToast(_ message: String) {
         toast = message
@@ -246,5 +248,12 @@ final class SessionModel: ObservableObject {
         guard let window else { return }
         window.title = activeDoc?.displayName ?? "Markdown Editor"
         window.representedURL = activeDoc?.url
+        // Word and token count under the title, live while the file changes.
+        window.subtitle = ""
+        statsSubscription = activeDoc.flatMap { doc in
+            doc.isHTML ? nil : doc.$text.sink { [weak window] text in
+                window?.subtitle = OpenDocument.stats(for: text)
+            }
+        }
     }
 }

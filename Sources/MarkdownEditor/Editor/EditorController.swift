@@ -39,6 +39,7 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         messageProxy.target = self
         webView.navigationDelegate = self
         webView.fileURL = { [document] in document.url }
+        webView.copyReference = { [weak self] selection in self?.copyReference(selection) }
         // Live accent and font changes from Settings, coalesced: a color-picker drag
         // fires dozens. Dark mode needs nothing here — the web view follows the app
         // appearance via prefers-color-scheme.
@@ -81,6 +82,17 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     /// The file changed on disk and the document took the new text.
     private func showDiskVersion() {
         webView.evaluateJavaScript("window.setMarkdown(\(jsonString(document.text)))")
+    }
+
+    /// Saved first, so the agent that reads the file finds the same lines.
+    private func copyReference(_ selection: String) {
+        guard !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            AppModel.shared.session.showToast("Select some text first")
+            return
+        }
+        document.flush()
+        guard let reference = document.reference(to: selection) else { return }
+        AppModel.shared.copy(reference, toast: "Reference copied")
     }
 
     private func applyTheme() {
@@ -156,10 +168,11 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     }
 }
 
-/// Web view whose context menu starts with "Copy Path" for saved documents —
-/// the quickest way to hand the file's path to an AI agent.
+/// Web view whose context menu starts with "Copy Path" and "Copy as Reference"
+/// for saved documents — the quickest way to point an AI agent at the file.
 final class EditorWebView: WKWebView {
     var fileURL: () -> URL? = { nil }
+    var copyReference: (String) -> Void = { _ in }
 
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
         super.willOpenMenu(menu, with: event)
@@ -167,13 +180,24 @@ final class EditorWebView: WKWebView {
         let item = NSMenuItem(title: "Copy Path", action: #selector(copyPath(_:)), keyEquivalent: "")
         item.target = self
         item.representedObject = url
+        // WebKit offers Copy whether or not text is selected, so there's no way
+        // to tell here; the selection is read on click.
+        let reference = NSMenuItem(title: "Copy as Reference", action: #selector(copySelectionAsReference(_:)), keyEquivalent: "")
+        reference.target = self
         menu.insertItem(item, at: 0)
-        menu.insertItem(.separator(), at: 1)
+        menu.insertItem(reference, at: 1)
+        menu.insertItem(.separator(), at: 2)
     }
 
     @objc private func copyPath(_ sender: NSMenuItem) {
         guard let url = sender.representedObject as? URL else { return }
         AppModel.shared.copyPath(url)
+    }
+
+    @objc private func copySelectionAsReference(_ sender: NSMenuItem) {
+        evaluateJavaScript("getSelection().toString()") { [weak self] result, _ in
+            self?.copyReference(result as? String ?? "")
+        }
     }
 }
 

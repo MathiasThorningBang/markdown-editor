@@ -38,6 +38,49 @@ final class OpenDocument: ObservableObject, Identifiable {
     var isHTML: Bool { url.map(FolderScanner.isHTML) ?? false }
     var displayName: String { url?.lastPathComponent ?? "Untitled" }
 
+    /// "path:12-14" followed by the passage as a quote, for pasting to an agent.
+    /// The editor shows text without markup, so the lines are a best guess:
+    /// the first source lines containing the passage's first and last line.
+    func reference(to selection: String) -> String? {
+        // The selection has a blank line between blocks and puts ordered-list
+        // numbers on a line of their own.
+        let lines = selection.replacing(#/(?m)^(\d+[.)])\n/#) { "\($0.1) " }
+            .split(separator: "\n")
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard let url, !lines.isEmpty else { return nil }
+        var location = url.path
+        let source = text.components(separatedBy: "\n").map(Self.plain)
+        let quoted = lines.map { Self.plain(String($0)) }.filter { !$0.isEmpty }
+        if let first = quoted.first, let last = quoted.last,
+           let start = source.firstIndex(where: { $0.contains(first) }),
+           let end = source[start...].firstIndex(where: { $0.contains(last) }) {
+            location += start == end ? ":\(start + 1)" : ":\(start + 1)-\(end + 1)"
+        }
+        return ([location] + lines.map { "> \($0)" }).joined(separator: "\n")
+    }
+
+    /// "1,240 words · ≈ 1.7k tokens" for the window subtitle. Words skip code
+    /// blocks (charts and diagrams show as visuals); tokens cover the whole file,
+    /// as an agent reads it, at a rough four characters per token.
+    static func stats(for text: String) -> String {
+        let prose = text.replacing(#/(?ms)^```.*?^```/#, with: "")
+        let words = prose.split(whereSeparator: \.isWhitespace)
+            .filter { $0.contains { $0.isLetter || $0.isNumber } }.count
+        let tokens = text.count / 4
+        let tokenText = tokens < 1000 ? tokens.formatted()
+            : (Double(tokens) / 1000).formatted(.number.precision(.fractionLength(tokens < 10_000 ? 0...1 : 0...0))) + "k"
+        return "\(words.formatted()) \(words == 1 ? "word" : "words") · ≈ \(tokenText) tokens"
+    }
+
+    /// A line as it reads in the editor: link targets and markup characters
+    /// dropped, whitespace collapsed.
+    private static func plain(_ line: String) -> String {
+        line.replacing(#/\]\([^)]*\)/#, with: "")
+            .filter { !"*_`~#>[]|\\".contains($0) }
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+    }
+
     /// Called on every editor change; arms the autosave debounce.
     func textChanged(_ newText: String) {
         text = newText

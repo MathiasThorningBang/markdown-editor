@@ -47,9 +47,13 @@ final class AppModel: ObservableObject {
     /// Puts a file's absolute path on the clipboard (for handing to AI
     /// agents) and confirms it with a toast.
     func copyPath(_ url: URL) {
+        copy(url.path, toast: "Path copied")
+    }
+
+    func copy(_ string: String, toast: String) {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(url.path, forType: .string)
-        session.showToast("Path copied")
+        NSPasteboard.general.setString(string, forType: .string)
+        session.showToast(toast)
     }
 
     // MARK: - Menu commands
