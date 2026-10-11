@@ -9,7 +9,7 @@ struct SidebarView: View {
     var body: some View {
         List {
             if !untitledDocs.isEmpty {
-                Section("Kladder") {
+                Section {
                     ForEach(untitledDocs) { doc in
                         SidebarRow(
                             name: doc.displayName,
@@ -21,6 +21,8 @@ struct SidebarView: View {
                             session.activate(doc)
                         }
                     }
+                } header: {
+                    SidebarHeader(title: "Kladder", count: untitledDocs.count)
                 }
             }
             ForEach(session.projects) { project in
@@ -37,14 +39,7 @@ struct SidebarView: View {
                         }
                     }
                 } header: {
-                    HStack {
-                        Text(project.name)
-                        Spacer()
-                        Text("\(project.files.count)")
-                            .foregroundStyle(NMColors.mutedForeground)
-                            .padding(.trailing, 10)
-                    }
-                    .contentShape(Rectangle())
+                    SidebarHeader(title: project.name, count: project.files.count)
                     .contextMenu {
                         Button("Kopiér sti") {
                             AppModel.shared.copyPath(project.folderURL)
@@ -64,6 +59,26 @@ struct SidebarView: View {
     }
 }
 
+/// Section header at 12px (the system sidebar default is 11pt, below the NM minimum).
+private struct SidebarHeader: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(NMColors.secondaryForeground)
+            Spacer()
+            Text("\(count)")
+                .font(.system(size: 12))
+                .foregroundStyle(NMColors.mutedForeground)
+                .padding(.trailing, 10)
+        }
+        .contentShape(Rectangle())
+    }
+}
+
 private struct SidebarRow: View {
     let name: String
     let url: URL?
@@ -75,7 +90,8 @@ private struct SidebarRow: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(name)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: isActive ? .medium : .regular))
+                    .foregroundStyle(NMColors.foreground)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 4)
@@ -95,7 +111,7 @@ private struct SidebarRow: View {
         .padding(.horizontal, 6)
         .background(
             RoundedRectangle(cornerRadius: 5)
-                .fill(isActive ? Color.primary.opacity(0.12) : .clear)
+                .fill(isActive ? NMColors.foreground.opacity(0.08) : .clear)
         )
         .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
         .listRowSeparator(.hidden)

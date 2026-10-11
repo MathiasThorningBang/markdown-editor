@@ -41,29 +41,111 @@
       --crepe-font-default: var(--font-body);
       --crepe-font-code: var(--font-mono);
 
+      --crepe-color-background: var(--color-background);
       --crepe-color-on-background: var(--color-foreground);
       --crepe-color-surface: var(--color-card);
+      --crepe-color-surface-low: var(--color-muted);
       --crepe-color-on-surface: var(--color-foreground);
       --crepe-color-on-surface-variant: var(--color-secondary-foreground);
       --crepe-color-outline: var(--color-muted-foreground);
       --crepe-color-primary: var(--color-primary);
-      --crepe-color-inline-code: var(--color-primary);
+      --crepe-color-secondary: var(--color-border);
+      --crepe-color-on-secondary: var(--color-foreground);
+      --crepe-color-inverse: var(--color-muted);
+      --crepe-color-on-inverse: var(--color-foreground);
+      --crepe-color-inline-code: var(--color-foreground);
+      --crepe-color-inline-area: var(--color-muted);
       --crepe-color-error: var(--color-primary);
+      --crepe-color-hover: var(--color-muted);
+      --crepe-color-selected: var(--color-border);
 
       font-size: 16px;
     }
 
-    /* NM display headings: DM Sans bold, tight tracking.
-       Crepe's reset uses `.milkdown .ProseMirror h1 { font-weight: 400 }` — match its specificity. */
+    /* Text rhythm: 16px body on a 26px line */
+    .milkdown .ProseMirror p {
+      line-height: 26px;
+    }
+
+    /* Calm document scale. Crepe's reset uses `.milkdown .ProseMirror h1 { font-weight: 400 }`
+       and a 42→18px scale — match its specificity. Space above separates sections,
+       the following paragraph's padding is the only space below. */
     .milkdown .ProseMirror h1, .milkdown .ProseMirror h2, .milkdown .ProseMirror h3,
     .milkdown .ProseMirror h4, .milkdown .ProseMirror h5, .milkdown .ProseMirror h6 {
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      margin-bottom: 0;
+    }
+    .milkdown .ProseMirror h1 { font-size: 32px; line-height: 40px; margin-top: 40px; letter-spacing: -0.02em; }
+    .milkdown .ProseMirror h2 { font-size: 24px; line-height: 32px; margin-top: 36px; }
+    .milkdown .ProseMirror h3 { font-size: 20px; line-height: 28px; margin-top: 28px; }
+    .milkdown .ProseMirror h4 { font-size: 18px; line-height: 26px; margin-top: 24px; }
+    .milkdown .ProseMirror h5 { font-size: 16px; line-height: 24px; margin-top: 20px; }
+    .milkdown .ProseMirror h6 {
+      font-size: 16px; line-height: 24px; margin-top: 20px;
+      font-weight: 600; color: var(--color-secondary-foreground);
+    }
+    .milkdown .ProseMirror > :first-child { margin-top: 0; }
+
+    /* Links in NM blue — Crepe colors `.milkdown .ProseMirror a` with primary, so match that */
+    .milkdown .ProseMirror a {
+      color: var(--color-nm-blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
     }
 
-    /* Links in NM blue */
-    .milkdown a {
-      color: var(--color-nm-blue);
+    /* Inline code: quiet gray chip, not a second accent color */
+    .milkdown .ProseMirror code {
+      padding: 0 5px;
+      border-radius: 4px;
+      background: var(--color-muted);
+    }
+
+    /* Blocks get room to breathe instead of sitting flush against each other */
+    .milkdown .milkdown-code-block {
+      margin: 16px 0;
+      padding: 4px 16px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+    }
+    .milkdown .milkdown-code-block .cm-editor {
+      font-size: 14px;
+    }
+    .milkdown .milkdown-table-block {
+      margin: 16px 0;
+    }
+    .milkdown .milkdown-table-block th,
+    .milkdown .milkdown-table-block td {
+      border-color: var(--color-border);
+      padding: 8px 12px;
+    }
+    .milkdown .milkdown-table-block th p,
+    .milkdown .milkdown-table-block td p {
+      padding: 0;
+    }
+    .milkdown .milkdown-list-item-block p {
+      padding: 2px 0;
+    }
+    .milkdown .milkdown-table-block th {
+      background: var(--color-card);
+      font-weight: 600;
+    }
+    .milkdown .ProseMirror hr {
+      margin: 24px 0;
+      height: 1px;
+      padding: 0;
+      background-color: var(--color-border);
+    }
+
+    /* Blockquote: thin rule, modest indent, secondary text */
+    .milkdown .ProseMirror blockquote {
+      padding-left: 20px;
+      margin: 12px 0;
+      color: var(--color-secondary-foreground);
+    }
+    .milkdown .ProseMirror blockquote:before {
+      width: 3px;
+      background: var(--color-border);
     }
 
     /* While Cmd is held, links and path-like inline code show they can be opened (Cmd+click) */

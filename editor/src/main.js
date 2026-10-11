@@ -1,5 +1,8 @@
 import { Crepe } from '@milkdown/crepe'
 import { replaceAll } from '@milkdown/utils'
+import { EditorView } from '@codemirror/view'
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+import { tags } from '@lezer/highlight'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
@@ -11,6 +14,28 @@ import '@fontsource/dm-sans/600.css'
 import '@fontsource/dm-sans/700.css'
 import '@fontsource/dm-sans/700-italic.css'
 import '@fontsource/geist-mono/400.css'
+import '@fontsource/geist-mono/600.css'
+
+// Grayscale code block theme on NM tokens — replaces Crepe's default oneDark,
+// which is a dark palette rendered on our light surface.
+const codeTheme = [
+  EditorView.theme({
+    '&': { color: 'var(--color-foreground)', backgroundColor: 'transparent' },
+    '.cm-content': { caretColor: 'var(--color-foreground)' },
+    '.cm-cursor': { borderLeftColor: 'var(--color-foreground)' },
+    '.cm-gutters': { color: 'var(--color-muted-foreground)', backgroundColor: 'transparent', border: 'none' },
+    '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'transparent' },
+    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+      backgroundColor: 'var(--color-border)',
+    },
+  }),
+  syntaxHighlighting(HighlightStyle.define([
+    { tag: [tags.keyword, tags.operatorKeyword, tags.controlKeyword, tags.definitionKeyword, tags.moduleKeyword], fontWeight: '600' },
+    { tag: [tags.string, tags.special(tags.string), tags.regexp], color: 'var(--color-secondary-foreground)' },
+    { tag: [tags.comment, tags.meta], color: 'var(--color-muted-foreground)' },
+    { tag: tags.heading, fontWeight: '600' },
+  ])),
+]
 
 let crepe = null
 let suppress = false
@@ -28,6 +53,9 @@ window.initEditor = async (markdown, baseHref) => {
   crepe = new Crepe({
     root: document.getElementById('editor'),
     defaultValue: markdown,
+    featureConfigs: {
+      [Crepe.Feature.CodeMirror]: { theme: codeTheme },
+    },
   })
 
   crepe.on((listener) => {
