@@ -80,6 +80,7 @@ private struct SidebarHeader: View {
 }
 
 private struct SidebarRow: View {
+    @ObservedObject private var theme = ThemeSettings.shared
     let name: String
     let url: URL?
     let document: OpenDocument?
@@ -111,20 +112,21 @@ private struct SidebarRow: View {
         .padding(.horizontal, 6)
         .background(
             RoundedRectangle(cornerRadius: 5)
-                .fill(isActive ? NMColors.foreground.opacity(0.08) : .clear)
+                .fill(isActive ? theme.accent.opacity(0.14) : .clear)
         )
         .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
         .listRowSeparator(.hidden)
     }
 }
 
-/// Dot = file is open; NM primary while it has unsaved changes (autosave pending).
+/// Dot = file is open; accent color while it has unsaved changes (autosave pending).
 private struct OpenDot: View {
     @ObservedObject var document: OpenDocument
+    @ObservedObject private var theme = ThemeSettings.shared
 
     var body: some View {
         Circle()
-            .fill(document.isDirty ? NMColors.primary : NMColors.mutedForeground)
+            .fill(document.isDirty ? theme.accent : NMColors.mutedForeground)
             .frame(width: 6, height: 6)
     }
 }

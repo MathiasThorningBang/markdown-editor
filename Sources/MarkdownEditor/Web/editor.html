@@ -18,6 +18,24 @@
 
       --font-body: 'DM Sans', system-ui, sans-serif;
       --font-mono: 'Geist Mono', monospace;
+
+      color-scheme: light dark;
+    }
+
+    /* Dark tokens: the same neutral scale, inverted. NM blue is lifted for
+       contrast on the dark background. --color-primary is the user's accent,
+       set from Swift (Indstillinger), so it is not redefined here. */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background: #0a0a0a;
+        --color-foreground: #fafafa;
+        --color-card: #171717;
+        --color-muted: #262626;
+        --color-muted-foreground: #737373;
+        --color-secondary-foreground: #a3a3a3;
+        --color-border: #262626;
+        --color-nm-blue: #5b9bd5;
+      }
     }
 
     html, body {
@@ -57,9 +75,10 @@
       --crepe-color-inline-area: var(--color-muted);
       --crepe-color-error: var(--color-primary);
       --crepe-color-hover: var(--color-muted);
-      --crepe-color-selected: var(--color-border);
+      --crepe-color-selected: color-mix(in srgb, var(--color-primary) 22%, transparent);
 
       font-size: 16px;
+      caret-color: var(--color-primary);
     }
 
     /* Text rhythm: 16px body on a 26px line */
@@ -135,6 +154,11 @@
       height: 1px;
       padding: 0;
       background-color: var(--color-border);
+    }
+
+    /* Checked task boxes carry the accent */
+    .milkdown .milkdown-list-item-block .label.checked svg {
+      fill: var(--color-primary);
     }
 
     /* Blockquote: thin rule, modest indent, secondary text */

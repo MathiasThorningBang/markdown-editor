@@ -26,7 +26,7 @@ const codeTheme = [
     '.cm-gutters': { color: 'var(--color-muted-foreground)', backgroundColor: 'transparent', border: 'none' },
     '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'transparent' },
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
-      backgroundColor: 'var(--color-border)',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 22%, transparent)',
     },
   }),
   syntaxHighlighting(HighlightStyle.define([

@@ -5,7 +5,9 @@ import SwiftUI
 /// launch state before any project exists.
 struct MainWindowView: View {
     @ObservedObject var session = AppModel.shared.session
+    @ObservedObject var theme = ThemeSettings.shared
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         // The split view (and thereby the editor web views) stays mounted at
@@ -24,8 +26,31 @@ struct MainWindowView: View {
                             .font(.system(size: 16))
                             .foregroundStyle(NMColors.secondaryForeground)
                     }
+                    if session.showSettings {
+                        SettingsView { session.showSettings = false }
+                            .background(NMColors.background)
+                    }
                 }
                 .toolbar {
+                    ToolbarItem {
+                        Button {
+                            theme.appearance = colorScheme == .dark ? .light : .dark
+                        } label: {
+                            Label(
+                                colorScheme == .dark ? "Lyst tema" : "Mørkt tema",
+                                systemImage: colorScheme == .dark ? "sun.max" : "moon"
+                            )
+                        }
+                        .help(colorScheme == .dark ? "Skift til lyst tema" : "Skift til mørkt tema")
+                    }
+                    ToolbarItem {
+                        Button {
+                            session.showSettings.toggle()
+                        } label: {
+                            Label("Indstillinger", systemImage: session.showSettings ? "gearshape.fill" : "gearshape")
+                        }
+                        .help("Indstillinger (⌘,)")
+                    }
                     if let url = session.activeDoc?.url {
                         ToolbarItem {
                             Button {
@@ -57,6 +82,7 @@ struct MainWindowView: View {
                 .allowsHitTesting(false)
             }
         }
+        .tint(theme.accent)
         .animation(.easeInOut(duration: 0.18), value: session.toast)
         .frame(minWidth: 640, minHeight: 400)
         .background(WindowAccessor { window in

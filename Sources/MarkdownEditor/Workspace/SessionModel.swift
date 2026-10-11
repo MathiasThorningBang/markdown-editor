@@ -17,6 +17,9 @@ final class SessionModel: ObservableObject {
     @Published private(set) var openDocs: [OpenDocument] = []
     @Published private(set) var activeDoc: OpenDocument?
 
+    /// Indstillinger shown in the editor canvas instead of the active document.
+    @Published var showSettings = false
+
     let editorPool = EditorPool()
 
     /// Transient confirmation shown by the main window (e.g. "Sti kopieret").
@@ -130,6 +133,7 @@ final class SessionModel: ObservableObject {
 
     func activate(_ doc: OpenDocument) {
         activeDoc = doc
+        showSettings = false
         updateWindowChrome()
     }
 

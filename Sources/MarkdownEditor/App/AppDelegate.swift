@@ -2,6 +2,10 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        ThemeSettings.shared.applyAppearance()
+    }
+
     /// LaunchServices entry point: Finder double-click, Open With, drag to Dock.
     /// (With a single Window scene, SwiftUI does not deliver file opens via
     /// onOpenURL — the delegate route is the reliable one.)

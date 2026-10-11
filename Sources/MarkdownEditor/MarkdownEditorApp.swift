@@ -10,6 +10,13 @@ struct MarkdownEditorApp: App {
         }
         .defaultSize(width: 1050, height: 800)
         .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("Indstillinger…") {
+                    AppModel.shared.session.showSettings = true
+                    AppModel.shared.bringWindowFront()
+                }
+                .keyboardShortcut(",")
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Ny fil") { AppModel.shared.newDocument() }
                     .keyboardShortcut("n")
