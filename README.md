@@ -2,7 +2,15 @@
 
 WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type, and Cmd+click opens links — including local file paths. Everything runs locally, no network.
 
-Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono).
+Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono) by default.
+
+## Appearance
+
+Open settings with the gear in the toolbar or ⌘, — they open as a page in the editor, not a separate window.
+
+- **Mode:** System, Light or Dark. The sun/moon button in the toolbar switches directly between light and dark.
+- **Accent color:** six presets or any color via the macOS color picker. It drives selection, the caret, checked tasks and the active file in the sidebar.
+- **Fonts:** separate choices for headings, body text and code — a short curated list first, then every font installed on your Mac.
 
 ## Why a markdown editor in 2026?
 
