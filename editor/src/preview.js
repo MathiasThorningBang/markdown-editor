@@ -71,6 +71,8 @@ async function mountMermaid(slot, source) {
       secondaryColor: cssVar('--color-muted'),
       tertiaryColor: cssVar('--color-background'),
       lineColor: cssVar('--color-muted-foreground'),
+      clusterBkg: cssVar('--color-background'),
+      clusterBorder: cssVar('--color-border'),
       textColor: cssVar('--color-foreground'),
       // Accent marks the active/critical items (gantt bars, highlights).
       taskBkgColor: cssVar('--color-primary'),
@@ -79,6 +81,11 @@ async function mountMermaid(slot, source) {
       taskTextColor: '#ffffff',
       taskTextLightColor: '#ffffff',
       taskTextOutsideColor: cssVar('--color-foreground'),
+      // Timeline/journey section colors: neutral boxes instead of derived dark grays.
+      ...Object.fromEntries(Array.from({ length: 12 }, (_, i) => [
+        [`cScale${i}`, cssVar('--color-border')],
+        [`cScaleLabel${i}`, cssVar('--color-foreground')],
+      ]).flat()),
     },
   })
   const id = `md-mermaid-${++mermaidCount}`

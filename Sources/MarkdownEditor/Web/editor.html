@@ -49,7 +49,7 @@
     }
 
     #editor {
-      max-width: 920px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 32px 24px 120px;
       font-size: 16px;
@@ -173,6 +173,11 @@
       height: auto;
       margin: 0 auto;
     }
+    /* Mermaid draws timeline axes in the text color; soften them.
+       !important: Mermaid's own rules are scoped to the diagram's id. */
+    .milkdown .md-preview-mermaid .lineWrapper line {
+      stroke: var(--color-muted-foreground) !important;
+    }
     .milkdown .md-preview-error {
       margin: 0;
       font-family: var(--font-mono);
@@ -222,6 +227,24 @@
     /* The drag-to-resize handle is pointless when images are always full width */
     .milkdown .milkdown-image-block .image-resize-handle {
       display: none;
+    }
+
+    /* Breakout layout: text keeps a reading width, while tables and rendered
+       ```html/```mermaid blocks use the full column. #editor beats Crepe's and
+       our own block margins; narrow windows collapse both to the same width. */
+    .milkdown .ProseMirror {
+      padding-left: 80px;
+      padding-right: 80px;
+    }
+    #editor .ProseMirror > * {
+      box-sizing: border-box;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #editor .ProseMirror > .milkdown-table-block,
+    #editor .ProseMirror > .milkdown-code-block:has(.md-preview-slot) {
+      max-width: none;
     }
   </style>
 </head>

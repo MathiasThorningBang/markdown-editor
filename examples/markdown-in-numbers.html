@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Markdown in numbers</title>
+  <style>
+    body { margin: 0; padding: 40px 32px 64px; background: var(--color-background); color: var(--color-foreground); font: 16px/1.6 var(--font-body); }
+    main { max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: 32px; line-height: 1.25; margin: 0 0 8px; }
+    .lede { color: var(--color-secondary-foreground); margin: 0 0 32px; max-width: 640px; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .card { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; padding: 18px; }
+    .kpi strong { display: block; font-size: 32px; line-height: 1.2; }
+    .kpi strong.accent { color: var(--color-primary); }
+    .kpi span { display: block; margin-top: 6px; color: var(--color-secondary-foreground); font-size: 14px; line-height: 1.4; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+    .card h2 { font-size: 16px; margin: 0 0 4px; }
+    .card p { margin: 0 0 16px; color: var(--color-secondary-foreground); font-size: 14px; line-height: 1.5; }
+    .chart { position: relative; height: 240px; }
+    footer { margin-top: 32px; color: var(--color-muted-foreground); font-size: 13px; line-height: 1.7; }
+    footer a { color: var(--color-nm-blue); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Markdown in numbers</h1>
+    <p class="lede">The figures behind <em>why-markdown.md</em>, on one page. Every number links to its source at the bottom; the ones marked "my test" are my own measurements.</p>
+
+    <div class="kpis">
+      <div class="card kpi"><strong class="accent">80 %</strong><span>fewer tokens for Cloudflare's blog post as markdown instead of HTML</span></div>
+      <div class="card kpi"><strong>~6x</strong><span>tokens for raw work files vs. the same content in markdown (my test)</span></div>
+      <div class="card kpi"><strong>1,500–3,000</strong><span>text tokens per PDF page in the Claude API, before the page image</span></div>
+      <div class="card kpi"><strong>60k+</strong><span>open-source projects with an AGENTS.md file</span></div>
+    </div>
+
+    <div class="charts">
+      <div class="card">
+        <h2>One blog post, two formats</h2>
+        <p>Cloudflare's announcement of Markdown for Agents, counted by Cloudflare.</p>
+        <div class="chart"><canvas id="post"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Tables: markdown isn't the floor</h2>
+        <p>Average tokens per database in TQA-Bench (8K setting). CSV wins on pure tables.</p>
+        <div class="chart"><canvas id="tables"></canvas></div>
+      </div>
+    </div>
+
+    <footer>
+      Sources:
+      <a href="https://blog.cloudflare.com/markdown-for-agents/">Cloudflare, Introducing Markdown for Agents (Feb 2026)</a> ·
+      <a href="https://platform.claude.com/docs/en/build-with-claude/pdf-support">Anthropic, PDF support</a> ·
+      <a href="https://agents.md/">agents.md</a> ·
+      <a href="https://arxiv.org/abs/2411.19504">TQA-Bench, table VII</a> ·
+      My own token test, described in the README.
+    </footer>
+  </main>
+
+  <script>
+    const muted = mdTheme.mutedForeground
+    new Chart(post, {
+      type: 'bar',
+      data: {
+        labels: ['HTML', 'Markdown'],
+        datasets: [{ label: 'Tokens', data: [16180, 3150], backgroundColor: [muted, mdTheme.primary], borderRadius: 4 }]
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    })
+    new Chart(tables, {
+      type: 'bar',
+      data: {
+        labels: ['CSV', 'Markdown', 'HTML'],
+        datasets: [{ label: 'Tokens', data: [3730, 5400, 10500], backgroundColor: [mdTheme.palette[1], mdTheme.primary, muted], borderRadius: 4 }]
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    })
+  </script>
+</body>
+</html>

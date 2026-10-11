@@ -66,10 +66,10 @@
           if (['pie', 'doughnut', 'polarArea'].includes(type)) {
             ds.backgroundColor ??= ds.data.map((_, j) => palette[j % palette.length])
           } else {
-            const color = palette[i % palette.length]
-            ds.borderColor ??= color
-            ds.backgroundColor ??= color
-            ds.pointBackgroundColor ??= color
+            // Fill and points follow the line color, so one explicit color is enough.
+            ds.borderColor ??= palette[i % palette.length]
+            ds.backgroundColor ??= ds.borderColor
+            ds.pointBackgroundColor ??= ds.borderColor
           }
         })
       },
