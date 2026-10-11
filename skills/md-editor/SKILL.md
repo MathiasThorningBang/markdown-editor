@@ -1,5 +1,5 @@
 ---
-name: md-editor-format
+name: md-editor
 description: Brug når du skriver .md- eller .html-filer, som brugeren skal læse i MarkdownEditor-appen, især planer, briefs og rapporter med diagrammer, charts, KPI'er eller tidsplaner. Beskriver hvornår du bruger markdown, ```mermaid, ```html med Chart.js eller en selvstændig .html-fil, og hvilke regler der gælder.
 ---
 

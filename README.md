@@ -25,7 +25,7 @@ Open settings with the gear in the toolbar or ⌘, — they open as a page in th
 - ` ```html ` blocks render inline in a sandboxed iframe. Chart.js is built in as `Chart`, and theme colors are available as CSS variables (`--color-primary`, `--color-card`, …) and as `mdTheme` in scripts.
 - `.html` files show up in the sidebar and open as a read-only view that reloads when the file changes on disk.
 
-Everything stays offline: previews and HTML files can't reach the network. See `examples/` for a demo. The agent skill in `skills/md-editor-format` teaches agents the format.
+Everything stays offline: previews and HTML files can't reach the network. See `examples/` for a demo. The agent skill in `skills/md-editor` teaches agents the format.
 
 ## Why a markdown editor in 2026?
 
@@ -45,7 +45,7 @@ So the agents work in `.md`. The problem is that raw markdown is a pain for huma
 git clone https://github.com/MathiasThorningBang/markdown-editor.git
 cd markdown-editor
 ./build.sh
-mkdir -p ~/.claude/skills && cp -R skills/md-editor-format ~/.claude/skills/
+mkdir -p ~/.claude/skills && cp -R skills/md-editor ~/.claude/skills/
 ```
 
 This builds the app and installs it to `/Applications/MarkdownEditor.app`. The last line installs the agent skill for Claude Code; other agents load skills from their own folder.
@@ -56,10 +56,10 @@ If you already have the app installed, this pulls the latest version and reinsta
 
 ```sh
 cd markdown-editor
-git pull && ./build.sh && cp -R skills/md-editor-format ~/.claude/skills/
+git pull && ./build.sh && cp -R skills/md-editor ~/.claude/skills/
 ```
 
-Restart the app afterwards if it's running.
+Restart the app afterwards if it's running. The skill used to be called `md-editor-format`; if `~/.claude/skills/md-editor-format` exists, delete it so agents don't see the skill twice.
 
 ### Let your agent do it
 
@@ -92,10 +92,11 @@ https://github.com/MathiasThorningBang/markdown-editor.
 4. Switch to the main branch and run git pull.
 5. Run ./build.sh from the repo root. It builds the app and installs it to
    /Applications/MarkdownEditor.app. If it fails, show me the error and stop.
-6. Install the agent skill in skills/md-editor-format: copy the folder into
+6. Install the agent skill in skills/md-editor: copy the folder into
    ~/.claude/skills/ (replacing an older copy) if you are Claude Code, or into
-   the folder you load skills from if you are another agent. If you don't
-   support skills, skip this step.
+   the folder you load skills from if you are another agent. Delete any old
+   copy named md-editor-format there. If you don't support skills, skip this
+   step.
 7. If MarkdownEditor is running, quit it normally (it saves open files on quit)
    and open it again.
 8. Tell me which commit I'm on now and summarize, in a few plain sentences,
