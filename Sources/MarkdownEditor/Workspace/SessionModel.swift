@@ -32,6 +32,9 @@ final class SessionModel: ObservableObject {
     /// Transient confirmation shown by the main window (e.g. "Path copied").
     @Published private(set) var toast: String?
     private var toastTask: Task<Void, Never>?
+    /// Word and token count of the active file, shown under the window title
+    /// and kept current while the file changes.
+    @Published private(set) var stats = ""
     private var statsSubscription: AnyCancellable?
 
     func showToast(_ message: String) {
@@ -245,15 +248,15 @@ final class SessionModel: ObservableObject {
     }
 
     private func updateWindowChrome() {
+        stats = ""
+        statsSubscription = activeDoc.flatMap { doc in
+            doc.isHTML ? nil : doc.$text.sink { [weak self] text in
+                let stats = OpenDocument.stats(for: text)
+                if self?.stats != stats { self?.stats = stats }
+            }
+        }
         guard let window else { return }
         window.title = activeDoc?.displayName ?? "Markdown Editor"
         window.representedURL = activeDoc?.url
-        // Word and token count under the title, live while the file changes.
-        window.subtitle = ""
-        statsSubscription = activeDoc.flatMap { doc in
-            doc.isHTML ? nil : doc.$text.sink { [weak window] text in
-                window?.subtitle = OpenDocument.stats(for: text)
-            }
-        }
     }
 }

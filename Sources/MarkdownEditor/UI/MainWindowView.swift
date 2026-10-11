@@ -31,6 +31,8 @@ struct MainWindowView: View {
                             .background(NMColors.background)
                     }
                 }
+                // SwiftUI owns this title bar; NSWindow.subtitle set directly doesn't show.
+                .navigationSubtitle(session.stats)
                 .toolbar {
                     ToolbarItem {
                         Button {
