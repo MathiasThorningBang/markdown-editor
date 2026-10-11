@@ -10,18 +10,20 @@ import WebKit
 final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     let webView: EditorWebView
     private let document: OpenDocument
-    private let folderURL: URL?
     private let messageProxy = WeakMessageHandler()
-    private var themeSubscription: AnyCancellable?
+    private var subscriptions: Set<AnyCancellable> = []
 
     /// True once Crepe has rendered the document. The host keeps the web view
     /// hidden until then, so switching files never shows a blank editor.
     private(set) var isReady = false
     var onReady: (() -> Void)?
 
-    init(document: OpenDocument, folderURL: URL?) {
+    /// Relative images and links resolve against the document's own folder —
+    /// projects can live anywhere on disk.
+    private var folderURL: URL? { document.url?.deletingLastPathComponent() }
+
+    init(document: OpenDocument) {
         self.document = document
-        self.folderURL = folderURL
 
         // Handlers must be registered before WKWebView(configuration:) — the
         // web view copies its configuration. The weak proxy breaks the retain
@@ -37,13 +39,19 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         messageProxy.target = self
         webView.navigationDelegate = self
         webView.fileURL = { [document] in document.url }
-        // Live accent and font changes from Indstillinger; dark mode needs nothing here —
-        // the web view follows the app appearance via prefers-color-scheme.
-        themeSubscription = ThemeSettings.shared.objectWillChange
-            .sink { [weak self] _ in
-                // objectWillChange fires before the stored value updates; read it next runloop.
-                DispatchQueue.main.async { self?.applyTheme() }
-            }
+        // Live accent and font changes from Settings, coalesced: a color-picker drag
+        // fires dozens. Dark mode needs nothing here — the web view follows the app
+        // appearance via prefers-color-scheme.
+        ThemeSettings.shared.objectWillChange
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { [weak self] _ in self?.applyTheme() }
+            .store(in: &subscriptions)
+        // "Save As" moves the document: point relative paths at the new folder.
+        document.$url
+            .dropFirst()
+            .sink { [weak self] url in self?.applyBase(url) }
+            .store(in: &subscriptions)
+        document.onReload = { [weak self] in self?.showDiskVersion() }
 
         let webDir = Bundle.module.url(forResource: "Web", withExtension: nil)!
         webView.loadFileURL(webDir.appendingPathComponent("editor.html"), allowingReadAccessTo: webDir)
@@ -51,8 +59,28 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         applyTheme()
-        let baseJSON = folderURL.map { jsonString("mdfile://\($0.path)/") } ?? "null"
+        let baseJSON = folderURL.map { jsonString(baseHref($0)) } ?? "null"
         webView.evaluateJavaScript("window.initEditor(\(jsonString(document.text)), \(baseJSON))")
+    }
+
+    // WebKit killed the page (crash or memory pressure): reload it with the current text.
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        webView.reload()
+    }
+
+    private func baseHref(_ folder: URL) -> String { "mdfile://\(folder.path)/" }
+
+    private func applyBase(_ url: URL?) {
+        guard let folder = url?.deletingLastPathComponent() else { return }
+        webView.evaluateJavaScript("""
+            (document.querySelector('base') ?? document.head.appendChild(document.createElement('base')))
+                .href = \(jsonString(baseHref(folder)))
+            """)
+    }
+
+    /// The file changed on disk and the document took the new text.
+    private func showDiskVersion() {
+        webView.evaluateJavaScript("window.setMarkdown(\(jsonString(document.text)))")
     }
 
     private func applyTheme() {
@@ -66,9 +94,10 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     }
 
     // Links must never navigate the editor web view itself; Cmd+clicks are opened
-    // externally via the openLink message instead.
+    // externally via the openLink message instead. (Keep the handler @MainActor like
+    // WebKit's, or under Swift 6 this silently stops matching the protocol.)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+                 decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
         decisionHandler(navigationAction.navigationType == .linkActivated ? .cancel : .allow)
     }
 
@@ -127,7 +156,7 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     }
 }
 
-/// Web view whose context menu starts with "Kopiér sti" for saved documents —
+/// Web view whose context menu starts with "Copy Path" for saved documents —
 /// the quickest way to hand the file's path to an AI agent.
 final class EditorWebView: WKWebView {
     var fileURL: () -> URL? = { nil }
@@ -135,7 +164,7 @@ final class EditorWebView: WKWebView {
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
         super.willOpenMenu(menu, with: event)
         guard let url = fileURL() else { return }
-        let item = NSMenuItem(title: "Kopiér sti", action: #selector(copyPath(_:)), keyEquivalent: "")
+        let item = NSMenuItem(title: "Copy Path", action: #selector(copyPath(_:)), keyEquivalent: "")
         item.target = self
         item.representedObject = url
         menu.insertItem(item, at: 0)

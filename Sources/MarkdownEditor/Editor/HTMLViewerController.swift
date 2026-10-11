@@ -15,7 +15,7 @@ extension EditorController: DocumentViewController {}
 
 /// Renders an .html file read-only, with the theme runtime and Chart.js
 /// injected and all network access blocked. Reloads when the file changes on
-/// disk, so an agent writing the file can be followed live.
+/// disk (the session's disk check), so an agent writing the file can be followed live.
 @MainActor
 final class HTMLViewerController: NSObject, DocumentViewController, WKNavigationDelegate {
     let webView: EditorWebView
@@ -23,30 +23,41 @@ final class HTMLViewerController: NSObject, DocumentViewController, WKNavigation
     private(set) var isReady = false
     var onReady: (() -> Void)?
 
-    private var lastModified: Date?
-    private var pollTimer: Timer?
+    /// Nothing loads until the offline rules are installed.
+    private var isOffline = false
     private var themeSubscription: AnyCancellable?
 
-    init(url: URL) {
+    init(document: OpenDocument, url: URL) {
         self.url = url
         webView = EditorWebView(frame: .zero, configuration: WKWebViewConfiguration())
         super.init()
         webView.navigationDelegate = self
         webView.fileURL = { [url] in url }
+        document.onReload = { [weak self] in self?.reload() }
 
-        // Accent and fonts are baked into the injected script: rebuild and reload.
+        // Accent and fonts are baked into the injected script: rebuild and reload,
+        // once per burst of changes.
         themeSubscription = ThemeSettings.shared.objectWillChange
-            .sink { [weak self] _ in
-                DispatchQueue.main.async { self?.reload() }
-            }
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { [weak self] _ in self?.reload() }
 
-        PreviewRuntime.blockNetwork(webView.configuration.userContentController) { [weak self] in
-            self?.reload()
-            self?.startPolling()
+        PreviewRuntime.blockNetwork(webView.configuration.userContentController) { [weak self] installed in
+            guard let self else { return }
+            isOffline = installed
+            if installed {
+                reload()
+            } else {
+                // Fail closed: without the rules the page could reach the network.
+                webView.loadHTMLString(
+                    "<meta name=color-scheme content='light dark'><p style='font: 16px system-ui; padding: 32px'>This file can't be shown because network blocking couldn't be turned on.</p>",
+                    baseURL: nil
+                )
+            }
         }
     }
 
     private func reload() {
+        guard isOffline else { return }
         let controller = webView.configuration.userContentController
         controller.removeAllUserScripts()
         controller.addUserScript(WKUserScript(
@@ -54,24 +65,11 @@ final class HTMLViewerController: NSObject, DocumentViewController, WKNavigation
             injectionTime: .atDocumentStart,
             forMainFrameOnly: false
         ))
-        lastModified = modificationDate()
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
-    // Polling survives atomic saves (write to temp + rename), which break file descriptors.
-    private func startPolling() {
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
-            MainActor.assumeIsolated {
-                guard let self else { return timer.invalidate() }
-                if let date = self.modificationDate(), date != self.lastModified {
-                    self.reload()
-                }
-            }
-        }
-    }
-
-    private func modificationDate() -> Date? {
-        (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        reload()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -83,7 +81,7 @@ final class HTMLViewerController: NSObject, DocumentViewController, WKNavigation
 
     // Clicked links open outside the app; the viewer itself never navigates away.
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+                 decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
         if navigationAction.navigationType == .linkActivated, let target = navigationAction.request.url {
             decisionHandler(.cancel)
             NSWorkspace.shared.open(target)
@@ -115,10 +113,11 @@ enum PreviewRuntime {
     private static var networkRules: WKContentRuleList?
 
     /// Blocks every http(s)/ws request: rendered HTML stays offline, like the editor.
-    static func blockNetwork(_ controller: WKUserContentController, then done: @escaping () -> Void) {
+    /// Calls `done(false)` if the rules couldn't be compiled.
+    static func blockNetwork(_ controller: WKUserContentController, then done: @escaping (Bool) -> Void) {
         if let networkRules {
             controller.add(networkRules)
-            return done()
+            return done(true)
         }
         let rules = #"[{"trigger":{"url-filter":"^(https?|wss?)://"},"action":{"type":"block"}}]"#
         WKContentRuleListStore.default().compileContentRuleList(
@@ -129,7 +128,7 @@ enum PreviewRuntime {
                     networkRules = list
                     controller.add(list)
                 }
-                done()
+                done(list != nil)
             }
         }
     }

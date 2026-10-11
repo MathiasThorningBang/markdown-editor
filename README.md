@@ -1,6 +1,6 @@
 # MarkdownEditor
 
-WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type, and Cmd+click opens links — including local file paths. Everything runs locally, no network.
+WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type and reload when an agent changes them on disk, and Cmd+click opens links — including local file paths. Everything runs locally, no network.
 
 Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono) by default.
 
@@ -32,7 +32,7 @@ So the agents work in `.md`. The problem is that raw markdown is a pain for huma
 
 ## Installation
 
-**Requirements:** macOS 14+ and Xcode Command Line Tools (`xcode-select --install`). Node/npm is *not* needed — the web bundle is committed.
+**Requirements:** macOS 14+ and Xcode Command Line Tools with Swift 6 or newer (`xcode-select --install`; if you already have older tools, update them under System Settings → General → Software Update). Node/npm is *not* needed — the web bundle is committed.
 
 ```sh
 git clone https://github.com/MathiasThorningBang/markdown-editor.git
@@ -71,7 +71,9 @@ https://github.com/MathiasThorningBang/markdown-editor.
 3. Switch to the main branch and run git pull.
 4. Run ./build.sh from the repo root. It builds the app and installs it to
    /Applications/MarkdownEditor.app. If it fails because the Xcode Command Line
-   Tools are missing, tell me to run xcode-select --install and stop.
+   Tools are missing, tell me to run xcode-select --install and stop. If they
+   are too old (the package needs Swift 6), tell me to update them under System
+   Settings → General → Software Update and stop.
 5. If MarkdownEditor is running, quit it normally (it saves open files on quit)
    and open it again.
 6. Tell me which commit I'm on now and summarize, in a few plain sentences,

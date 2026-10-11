@@ -39,8 +39,8 @@ const codeTheme = [
 ]
 
 let crepe = null
-let suppress = false
 let ready = false
+let created = null
 
 // Called from Swift once the page has loaded.
 window.initEditor = async (markdown, baseHref) => {
@@ -60,8 +60,8 @@ window.initEditor = async (markdown, baseHref) => {
         // ```html and ```mermaid blocks show rendered; the toggle reveals the source.
         renderPreview,
         previewOnlyByDefault: true,
-        previewToggleText: (previewOnly) => (previewOnly ? 'Redigér' : 'Skjul kode'),
-        previewLabel: 'Visning',
+        previewToggleText: (previewOnly) => (previewOnly ? 'Edit' : 'Hide code'),
+        previewLabel: 'Preview',
       },
     },
   })
@@ -69,29 +69,37 @@ window.initEditor = async (markdown, baseHref) => {
   crepe.on((listener) => {
     listener.markdownUpdated((_ctx, md, prev) => {
       retagPathCode()
-      // Ignore Crepe's initial parse/normalize pass — opening a file must not dirty it.
-      if (!ready || suppress || md === prev) return
+      if (!ready || md === prev) return
       window.webkit.messageHandlers.contentChanged.postMessage(md)
     })
   })
 
   startPreviews(document.getElementById('editor'))
-  await crepe.create()
-  ready = true
+  created = crepe.create()
+  await created
+  settleQuietly()
   retagPathCode()
   // Swift keeps this web view hidden until the editor has rendered.
   window.webkit.messageHandlers.editorReady.postMessage(true)
 }
 
-// Called from Swift when the document changes outside the editor (e.g. Revert).
-window.setMarkdown = (markdown) => {
-  if (!crepe) return
-  suppress = true
-  try {
-    crepe.editor.action(replaceAll(markdown))
-  } finally {
-    suppress = false
-  }
+// Called from Swift when the file changed on disk. Re-creating the state (flush)
+// clears undo history, so ⌘Z can't bring the old text back.
+window.setMarkdown = async (markdown) => {
+  if (!created) return
+  await created
+  settleQuietly()
+  crepe.editor.action(replaceAll(markdown, true))
+  retagPathCode()
+}
+
+// Milkdown reports changes 200 ms late, and right after (re)loading Crepe adjusts
+// the document itself (list spacing, a trailing paragraph). Neither that nor an
+// update still in flight from before a reload may reach Swift as an edit, or
+// merely opening a file would rewrite it.
+function settleQuietly() {
+  ready = false
+  setTimeout(() => { ready = true }, 500)
 }
 
 // Cmd+click on a link or a path-like inline code span opens it externally (handled by Swift).

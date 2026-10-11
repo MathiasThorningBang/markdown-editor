@@ -12,14 +12,9 @@ final class EditorPool {
         if let existing = controllers[doc.id] { return existing }
         let controller: any DocumentViewController
         if let url = doc.url, doc.isHTML {
-            controller = HTMLViewerController(url: url)
+            controller = HTMLViewerController(document: doc, url: url)
         } else {
-            // Base resolves relative paths (images, links) against the
-            // document's own folder — projects can live anywhere on disk.
-            controller = EditorController(
-                document: doc,
-                folderURL: doc.url?.deletingLastPathComponent()
-            )
+            controller = EditorController(document: doc)
         }
         controllers[doc.id] = controller
         return controller

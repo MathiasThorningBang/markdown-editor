@@ -2,7 +2,7 @@
 
 Most of what I hand to an AI agent ends up as a `.md` file, and so does most of what I get back: briefs, plans, research notes, reports. The README has the short version of why. This is the longer one, with the numbers behind it.
 
-It doubles as a demo. Every chart and diagram below is written as text inside this file, so an agent reads and edits them the same way it reads the prose. Click **Redigér** on a block to see its source.
+It doubles as a demo. Every chart and diagram below is written as text inside this file, so an agent reads and edits them the same way it reads the prose. Click **Edit** on a block to see its source.
 
 ```html
 <style>

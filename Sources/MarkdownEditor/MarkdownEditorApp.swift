@@ -11,21 +11,23 @@ struct MarkdownEditorApp: App {
         .defaultSize(width: 1050, height: 800)
         .commands {
             CommandGroup(replacing: .appSettings) {
-                Button("Indstillinger…") {
+                Button("Settings…") {
                     AppModel.shared.session.showSettings = true
                     AppModel.shared.bringWindowFront()
                 }
                 .keyboardShortcut(",")
             }
             CommandGroup(replacing: .newItem) {
-                Button("Ny fil") { AppModel.shared.newDocument() }
+                Button("New File") { AppModel.shared.newDocument() }
                     .keyboardShortcut("n")
-                Button("Åbn…") { AppModel.shared.openPanel() }
+                Button("Open…") { AppModel.shared.openPanel() }
                     .keyboardShortcut("o")
             }
             CommandGroup(replacing: .saveItem) {
-                Button("Gem") { AppModel.shared.saveActive() }
+                Button("Save") { AppModel.shared.saveActive() }
                     .keyboardShortcut("s")
+                Button("Close File") { AppModel.shared.closeActive() }
+                    .keyboardShortcut("w")
             }
         }
     }

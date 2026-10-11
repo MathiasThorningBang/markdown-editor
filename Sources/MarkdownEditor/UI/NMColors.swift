@@ -22,8 +22,8 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .system: "System"
-        case .light: "Lyst"
-        case .dark: "Mørkt"
+        case .light: "Light"
+        case .dark: "Dark"
         }
     }
 }
@@ -37,12 +37,12 @@ struct AccentPreset: Identifiable {
     static let nmRed: UInt32 = 0xDF475C
 
     static let all = [
-        AccentPreset(name: "Rød", hex: nmRed),
+        AccentPreset(name: "Red", hex: nmRed),
         AccentPreset(name: "Orange", hex: 0xE07A2E),
-        AccentPreset(name: "Grøn", hex: 0x2F9E6B),
-        AccentPreset(name: "Petrol", hex: 0x1F8A8A),
-        AccentPreset(name: "Blå", hex: 0x2E7AB5),
-        AccentPreset(name: "Lilla", hex: 0x7C5CD6),
+        AccentPreset(name: "Green", hex: 0x2F9E6B),
+        AccentPreset(name: "Teal", hex: 0x1F8A8A),
+        AccentPreset(name: "Blue", hex: 0x2E7AB5),
+        AccentPreset(name: "Purple", hex: 0x7C5CD6),
     ]
 }
 

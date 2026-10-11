@@ -23,7 +23,7 @@ struct SidebarView: View {
                         }
                     }
                 } header: {
-                    SidebarHeader(title: "Kladder", count: untitledDocs.count)
+                    SidebarHeader(title: "Drafts", count: untitledDocs.count)
                 }
             }
             ForEach(session.projects) { project in
@@ -42,10 +42,10 @@ struct SidebarView: View {
                 } header: {
                     SidebarHeader(title: project.name, count: project.files.count)
                     .contextMenu {
-                        Button("Kopiér sti") {
+                        Button("Copy Path") {
                             AppModel.shared.copyPath(project.folderURL)
                         }
-                        Button("Fjern fra sidebar") {
+                        Button("Remove from Sidebar") {
                             session.removeProject(project.folderURL)
                         }
                     }
@@ -75,7 +75,7 @@ private struct SidebarHeader: View {
             Spacer()
             Text("\(count)")
                 .font(.system(size: 12))
-                .foregroundStyle(NMColors.mutedForeground)
+                .foregroundStyle(NMColors.secondaryForeground)
                 .padding(.trailing, 10)
         }
         .contentShape(Rectangle())
@@ -108,7 +108,7 @@ private struct SidebarRow: View {
         .buttonStyle(.plain)
         .contextMenu {
             if let url {
-                Button("Kopiér sti") { AppModel.shared.copyPath(url) }
+                Button("Copy Path") { AppModel.shared.copyPath(url) }
             }
         }
         .padding(.vertical, 3)
@@ -131,5 +131,6 @@ private struct OpenDot: View {
         Circle()
             .fill(document.isDirty ? theme.accent : NMColors.mutedForeground)
             .frame(width: 6, height: 6)
+            .accessibilityLabel(document.isDirty ? "Unsaved" : "Open")
     }
 }

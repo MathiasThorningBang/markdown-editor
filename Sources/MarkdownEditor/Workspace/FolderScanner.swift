@@ -17,6 +17,10 @@ enum FolderScanner {
     /// Shown read-only (HTMLViewerController).
     static let htmlExtensions: Set<String> = ["html", "htm"]
 
+    static func isHTML(_ url: URL) -> Bool {
+        htmlExtensions.contains(url.pathExtension.lowercased())
+    }
+
     static func scan(_ folder: URL) -> [FileEntry] {
         let contents = (try? FileManager.default.contentsOfDirectory(
             at: folder, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []

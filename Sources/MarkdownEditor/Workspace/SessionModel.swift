@@ -17,12 +17,18 @@ final class SessionModel: ObservableObject {
     @Published private(set) var openDocs: [OpenDocument] = []
     @Published private(set) var activeDoc: OpenDocument?
 
-    /// Indstillinger shown in the editor canvas instead of the active document.
+    /// Settings shown in the editor canvas instead of the active document.
     @Published var showSettings = false
 
     let editorPool = EditorPool()
 
-    /// Transient confirmation shown by the main window (e.g. "Sti kopieret").
+    /// Each open file keeps its web view for instant switching; past this many,
+    /// the least recently used hidden ones are released. Text and autosave live
+    /// in OpenDocument, so only the view and its undo history go.
+    private static let liveEditorLimit = 8
+    private var recentDocs: [OpenDocument] = []
+
+    /// Transient confirmation shown by the main window (e.g. "Path copied").
     @Published private(set) var toast: String?
     private var toastTask: Task<Void, Never>?
 
@@ -53,6 +59,15 @@ final class SessionModel: ObservableObject {
             .filter { FileManager.default.fileExists(atPath: $0.path, isDirectory: &isDirectory) && isDirectory.boolValue }
             .map { Project(folderURL: $0, files: FolderScanner.scan($0)) }
         persistProjects() // prune folders that no longer exist
+
+        // Agents edit open files on disk: one cheap modification-date check per file per second.
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard let self else { return }
+                openDocs.forEach { $0.syncWithDisk() }
+            }
+        }
     }
 
     func addProject(_ folder: URL) {
@@ -75,21 +90,16 @@ final class SessionModel: ObservableObject {
     /// Removes the group from the sidebar (files on disk are untouched) and
     /// closes its open documents.
     func removeProject(_ folder: URL) {
-        guard let index = projects.firstIndex(where: { $0.folderURL == folder }) else { return }
-        let removed = projects.remove(at: index)
-        persistProjects()
-
+        guard projects.contains(where: { $0.folderURL == folder }) else { return }
         let closing = openDocs.filter { doc in
             guard let url = doc.url else { return false }
-            return canonical(url.deletingLastPathComponent()) == removed.folderURL
+            return canonical(url.deletingLastPathComponent()) == folder
         }
-        closing.forEach { $0.flush() }
-        openDocs.removeAll { doc in closing.contains { $0 === doc } }
-        closing.forEach { editorPool.close($0.id) }
-        if let active = activeDoc, closing.contains(where: { $0 === active }) {
-            activeDoc = openDocs.last
-            updateWindowChrome()
-        }
+        // A failed write leaves the text only in memory; keep the project instead of losing it.
+        guard closing.map({ $0.flush() }).allSatisfy({ $0 }) else { return }
+        projects.removeAll { $0.folderURL == folder }
+        persistProjects()
+        discard(closing)
     }
 
     /// Rescans project folders, publishing only if something actually changed —
@@ -97,8 +107,16 @@ final class SessionModel: ObservableObject {
     /// the sidebar visibly rebuild.
     func refreshFiles() {
         let rescanned = projects.map { Project(folderURL: $0.folderURL, files: FolderScanner.scan($0.folderURL)) }
-        guard !rescanned.elementsEqual(projects, by: { $0.files == $1.files }) else { return }
-        projects = rescanned
+        if !rescanned.elementsEqual(projects, by: { $0.files == $1.files }) {
+            projects = rescanned
+        }
+        // Renamed or deleted outside the app: drop clean documents. A dirty one stays
+        // open (flush won't recreate the old file) until it's saved elsewhere or closed.
+        let gone = openDocs.filter { doc in
+            guard let url = doc.url else { return false }
+            return !doc.isDirty && !FileManager.default.fileExists(atPath: url.path)
+        }
+        if !gone.isEmpty { discard(gone) }
     }
 
     func document(for url: URL) -> OpenDocument? {
@@ -114,8 +132,8 @@ final class SessionModel: ObservableObject {
             activate(existing)
             return
         }
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
-            presentReadFailure(url)
+        guard let text = FolderScanner.isHTML(url) ? "" : (try? String(contentsOf: url, encoding: .utf8)) else {
+            OpenDocument.presentReadFailure(url)
             return
         }
         activeDoc?.flush()
@@ -134,7 +152,25 @@ final class SessionModel: ObservableObject {
     func activate(_ doc: OpenDocument) {
         activeDoc = doc
         showSettings = false
+        recentDocs.removeAll { $0 === doc }
+        recentDocs.append(doc)
+        recentDocs.dropLast(Self.liveEditorLimit).forEach { editorPool.close($0.id) }
         updateWindowChrome()
+    }
+
+    /// ⌘W: closes Settings if shown, else the active document, else the window.
+    func closeActive() {
+        if showSettings {
+            showSettings = false
+            return
+        }
+        guard let doc = activeDoc else {
+            window?.performClose(nil)
+            return
+        }
+        doc.flush()
+        guard !doc.isDirty || confirmDiscard([doc]) else { return }
+        discard([doc])
     }
 
     /// ⌘S: untitled documents get the save panel, saved documents just flush
@@ -156,9 +192,46 @@ final class SessionModel: ObservableObject {
     }
 
     /// Documents that would lose content if dropped now: unsaved untitled
-    /// drafts and documents whose last write failed.
+    /// drafts and documents whose last write failed or whose file vanished.
     var dirtyDocs: [OpenDocument] {
         openDocs.filter(\.isDirty)
+    }
+
+    /// Drops documents and their web views; the most recently used remaining
+    /// document becomes active if the active one went. Callers flush first.
+    private func discard(_ docs: [OpenDocument]) {
+        let ids = Set(docs.map(\.id))
+        openDocs.removeAll { ids.contains($0.id) }
+        recentDocs.removeAll { ids.contains($0.id) }
+        ids.forEach(editorPool.close)
+        if let active = activeDoc, ids.contains(active.id) {
+            activeDoc = recentDocs.last
+            updateWindowChrome()
+        }
+    }
+
+    /// Asks before dropping text that only exists in memory. True = go ahead.
+    func confirmDiscard(_ docs: [OpenDocument]) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = docs.count == 1
+            ? "Do you want to save \(docs[0].displayName)?"
+            : "Do you want to save \(docs.count) documents?"
+        alert.informativeText = "Your changes will be lost if you don't save them."
+        alert.addButton(withTitle: "Save…")
+        alert.addButton(withTitle: "Don't Save")
+        alert.addButton(withTitle: "Cancel")
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            return docs.allSatisfy { doc in
+                guard doc.saveAs(defaultDirectory: projects.first?.folderURL), let url = doc.url else { return false }
+                addProject(url.deletingLastPathComponent())
+                return true
+            }
+        case .alertSecondButtonReturn:
+            return true
+        default:
+            return false
+        }
     }
 
     private func canonical(_ folder: URL) -> URL {
@@ -173,12 +246,5 @@ final class SessionModel: ObservableObject {
         guard let window else { return }
         window.title = activeDoc?.displayName ?? "Markdown Editor"
         window.representedURL = activeDoc?.url
-    }
-
-    private func presentReadFailure(_ url: URL) {
-        let alert = NSAlert()
-        alert.messageText = "Kunne ikke læse \(url.lastPathComponent)"
-        alert.informativeText = "Filen kunne ikke læses som UTF-8-tekst."
-        alert.runModal()
     }
 }

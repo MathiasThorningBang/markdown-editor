@@ -49,7 +49,7 @@ final class AppModel: ObservableObject {
     func copyPath(_ url: URL) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(url.path, forType: .string)
-        session.showToast("Sti kopieret")
+        session.showToast("Path copied")
     }
 
     // MARK: - Menu commands
@@ -72,6 +72,10 @@ final class AppModel: ObservableObject {
         session.saveActive()
     }
 
+    func closeActive() {
+        session.closeActive()
+    }
+
     // MARK: - Termination
 
     /// Flushes everything; prompts once if content would be lost (unsaved
@@ -79,26 +83,6 @@ final class AppModel: ObservableObject {
     func prepareToTerminate() -> Bool {
         session.flushAll()
         let unsaved = session.dirtyDocs
-        guard !unsaved.isEmpty else { return true }
-
-        let alert = NSAlert()
-        alert.messageText = unsaved.count == 1
-            ? "Vil du gemme det nye dokument?"
-            : "Vil du gemme \(unsaved.count) nye dokumenter?"
-        alert.informativeText = "Indholdet går tabt, hvis du ikke gemmer."
-        alert.addButton(withTitle: "Gem…")
-        alert.addButton(withTitle: "Kassér")
-        alert.addButton(withTitle: "Annullér")
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            for doc in unsaved where !doc.saveAs(defaultDirectory: session.projects.first?.folderURL) {
-                return false
-            }
-            return true
-        case .alertSecondButtonReturn:
-            return true
-        default:
-            return false
-        }
+        return unsaved.isEmpty || session.confirmDiscard(unsaved)
     }
 }

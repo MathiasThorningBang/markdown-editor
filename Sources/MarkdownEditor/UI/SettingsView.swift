@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Indstillinger as a page in the editor canvas (⌘, or the gear in the
+/// Settings as a page in the editor canvas (⌘, or the gear in the
 /// toolbar). Selecting a file in the sidebar closes it again.
 struct SettingsView: View {
     @ObservedObject var theme = ThemeSettings.shared
@@ -10,7 +10,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("Udseende")
+                    Text("Appearance")
                         .font(.system(size: 28, weight: .bold))
                         .tracking(-0.4)
                     Spacer()
@@ -23,16 +23,17 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.cancelAction)
-                    .help("Luk indstillinger (Esc)")
+                    .help("Close settings (Esc)")
+                    .accessibilityLabel("Close settings")
                 }
                 .padding(.bottom, 40)
 
-                Text("Visuel stil")
+                Text("Visual style")
                     .font(.system(size: 14, weight: .semibold))
                     .padding(.bottom, 12)
 
                 SettingsCard {
-                    SettingsRow("Tilstand") {
+                    SettingsRow("Mode") {
                         HStack(spacing: 12) {
                             ForEach(AppearanceMode.allCases) { mode in
                                 ModeThumbnail(
@@ -49,7 +50,7 @@ struct SettingsView: View {
                 .padding(.bottom, 16)
 
                 SettingsCard {
-                    SettingsRow("Temafarve") {
+                    SettingsRow("Accent color") {
                         HStack(spacing: 8) {
                             ForEach(AccentPreset.all) { preset in
                                 Swatch(
@@ -59,6 +60,8 @@ struct SettingsView: View {
                                     theme.accentHex = preset.hex
                                 }
                                 .help(preset.name)
+                                .accessibilityLabel(preset.name)
+                                .accessibilityAddTraits(preset.hex == theme.accentHex ? .isSelected : [])
                             }
                             HexChip(theme: theme)
                                 .padding(.leading, 6)
@@ -68,27 +71,27 @@ struct SettingsView: View {
                 .padding(.bottom, 16)
 
                 SettingsCard {
-                    SettingsRow("Overskrifter") {
+                    SettingsRow("Headings") {
                         FontPicker(selection: $theme.headingFont, role: .text)
                     }
                     Divider()
-                    SettingsRow("Brødtekst") {
+                    SettingsRow("Body text") {
                         FontPicker(selection: $theme.bodyFont, role: .text)
                     }
                     Divider()
-                    SettingsRow("Kode") {
+                    SettingsRow("Code") {
                         FontPicker(selection: $theme.codeFont, role: .code)
                     }
                 }
 
                 HStack {
                     Spacer()
-                    Button("Nulstil til standard") {
+                    Button("Reset to defaults") {
                         theme.resetToDefaults()
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 13))
-                    .foregroundStyle(NMColors.mutedForeground)
+                    .foregroundStyle(NMColors.secondaryForeground)
                 }
                 .padding(.top, 20)
             }
@@ -222,7 +225,7 @@ private struct HexChip: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            ColorPicker("Vælg farve", selection: theme.accentColorBinding, supportsOpacity: false)
+            ColorPicker("Choose color", selection: theme.accentColorBinding, supportsOpacity: false)
                 .labelsHidden()
                 .frame(width: 20, height: 20)
             Text(theme.accentCSS.uppercased())
@@ -233,7 +236,7 @@ private struct HexChip: View {
         .padding(.trailing, 10)
         .padding(.vertical, 4)
         .background(Capsule().strokeBorder(NMColors.border, lineWidth: 1))
-        .help("Vælg din egen farve")
+        .help("Pick your own color")
     }
 }
 
@@ -249,7 +252,7 @@ private struct FontPicker: View {
     var body: some View {
         let curated = FontChoice.curated(role)
         let installed = role == .text ? Self.installedText : Self.installedCode
-        Picker("Skrifttype", selection: $selection) {
+        Picker("Font", selection: $selection) {
             ForEach(curated) { font in
                 Text(font.name).font(font.previewFont).tag(font.family)
             }
@@ -258,7 +261,7 @@ private struct FontPicker: View {
                 && !installed.contains(where: { $0.family == selection }) {
                 Text(selection).tag(selection)
             }
-            Section("Andre skrifttyper") {
+            Section("Other fonts") {
                 ForEach(installed) { font in
                     Text(font.name).font(font.previewFont).tag(font.family)
                 }

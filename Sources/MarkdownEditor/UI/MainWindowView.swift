@@ -22,7 +22,7 @@ struct MainWindowView: View {
                     WorkspaceEditorHost(session: session)
                         .ignoresSafeArea(edges: .bottom)
                     if session.activeDoc == nil {
-                        Text("Vælg en fil i sidebaren")
+                        Text("Select a file in the sidebar")
                             .font(.system(size: 16))
                             .foregroundStyle(NMColors.secondaryForeground)
                     }
@@ -37,28 +37,28 @@ struct MainWindowView: View {
                             theme.appearance = colorScheme == .dark ? .light : .dark
                         } label: {
                             Label(
-                                colorScheme == .dark ? "Lyst tema" : "Mørkt tema",
+                                colorScheme == .dark ? "Light Mode" : "Dark Mode",
                                 systemImage: colorScheme == .dark ? "sun.max" : "moon"
                             )
                         }
-                        .help(colorScheme == .dark ? "Skift til lyst tema" : "Skift til mørkt tema")
+                        .help(colorScheme == .dark ? "Switch to light mode" : "Switch to dark mode")
                     }
                     ToolbarItem {
                         Button {
                             session.showSettings.toggle()
                         } label: {
-                            Label("Indstillinger", systemImage: session.showSettings ? "gearshape.fill" : "gearshape")
+                            Label("Settings", systemImage: session.showSettings ? "gearshape.fill" : "gearshape")
                         }
-                        .help("Indstillinger (⌘,)")
+                        .help("Settings (⌘,)")
                     }
                     if let url = session.activeDoc?.url {
                         ToolbarItem {
                             Button {
                                 AppModel.shared.copyPath(url)
                             } label: {
-                                Label("Kopiér sti", systemImage: "doc.on.clipboard")
+                                Label("Copy Path", systemImage: "doc.on.clipboard")
                             }
-                            .help("Kopiér filens sti til udklipsholderen")
+                            .help("Copy the file's path to the clipboard")
                         }
                     }
                 }
@@ -107,10 +107,10 @@ struct MainWindowView: View {
 
     private var emptyState: some View {
         VStack(spacing: 14) {
-            Text("Åbn en .md-fil eller en mappe")
+            Text("Open a .md file or a folder")
                 .font(.system(size: 16))
                 .foregroundStyle(NMColors.secondaryForeground)
-            Button("Åbn…") { AppModel.shared.openPanel() }
+            Button("Open…") { AppModel.shared.openPanel() }
                 .keyboardShortcut("o")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
