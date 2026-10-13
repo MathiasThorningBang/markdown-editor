@@ -24,8 +24,9 @@ Open settings with the gear in the toolbar or ⌘, — they open as a page in th
 - ` ```mermaid ` blocks render as diagrams (flowcharts, gantt, sequence, …).
 - ` ```html ` blocks render inline in a sandboxed iframe. Chart.js is built in as `Chart`, and theme colors are available as CSS variables (`--color-primary`, `--color-card`, …) and as `mdTheme` in scripts.
 - `.html` files show up in the sidebar and open as a read-only view that reloads when the file changes on disk.
+- `.canvas` files ([JSON Canvas](https://jsoncanvas.org), the format Obsidian uses) open as a pan/zoom board for prototypes and wireframes. HTML file nodes are live frames, and each one reloads when its file changes. Notes and `.md` nodes render as cards, groups and arrows show variants and flows. Drag a frame by its name and resize it from the corner; the new layout is saved to the file. Click a frame to use it, double-click its name to open the file. Drag on the background to select, shift-click to add; ⌘G groups the selection and ⌥-drag draws a new group. Double-click a group's name to rename it, pick its color next to the name, and press Delete (or ⌘⇧G) to remove the group but keep what's inside. Pan with two fingers or space-drag. ⌘Z and ⇧⌘Z undo and redo, and the ? button next to the zoom level lists every shortcut. Drag images, `.html` or `.md` files in from Finder to add them; they're copied to an `assets/` folder next to the canvas.
 
-Everything stays offline: previews and HTML files can't reach the network. See `examples/` for a demo. The agent skill in `skills/md-editor` teaches agents the format.
+Everything stays offline: previews, HTML files and canvas frames can't reach the network. See `examples/` for a demo, and `examples/canvas/demo.canvas` for a canvas. The agent skills teach agents the format: `skills/md-editor` for documents, `skills/md-canvas` for canvases.
 
 ## Why a markdown editor in 2026?
 
@@ -45,10 +46,10 @@ So the agents work in `.md`. The problem is that raw markdown is a pain for huma
 git clone https://github.com/MathiasThorningBang/markdown-editor.git
 cd markdown-editor
 ./build.sh
-mkdir -p ~/.claude/skills && cp -R skills/md-editor ~/.claude/skills/
+mkdir -p ~/.claude/skills && cp -R skills/md-editor skills/md-canvas ~/.claude/skills/
 ```
 
-This builds the app and installs it to `/Applications/MarkdownEditor.app`. The last line installs the agent skill for Claude Code; other agents load skills from their own folder.
+This builds the app and installs it to `/Applications/MarkdownEditor.app`. The last line installs the agent skills for Claude Code; other agents load skills from their own folder.
 
 ## Updating
 
@@ -56,7 +57,7 @@ If you already have the app installed, this pulls the latest version and reinsta
 
 ```sh
 cd markdown-editor
-git pull && ./build.sh && cp -R skills/md-editor ~/.claude/skills/
+git pull && ./build.sh && cp -R skills/md-editor skills/md-canvas ~/.claude/skills/
 ```
 
 Restart the app afterwards if it's running. The skill used to be called `md-editor-format`; if `~/.claude/skills/md-editor-format` exists, delete it so agents don't see the skill twice.
@@ -92,8 +93,8 @@ https://github.com/MathiasThorningBang/markdown-editor.
 4. Switch to the main branch and run git pull.
 5. Run ./build.sh from the repo root. It builds the app and installs it to
    /Applications/MarkdownEditor.app. If it fails, show me the error and stop.
-6. Install the agent skill in skills/md-editor: copy the folder into
-   ~/.claude/skills/ (replacing an older copy) if you are Claude Code, or into
+6. Install the agent skills in skills/md-editor and skills/md-canvas: copy both
+   folders into ~/.claude/skills/ (replacing older copies) if you are Claude Code, or into
    the folder you load skills from if you are another agent. Delete any old
    copy named md-editor-format there. If you don't support skills, skip this
    step.

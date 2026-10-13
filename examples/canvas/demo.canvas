@@ -1,0 +1,158 @@
+{
+	"nodes": [
+		{
+			"id": "b0f322a7bef84332",
+			"type": "group",
+			"label": "Login: to cariabter",
+			"x": -15,
+			"y": -158,
+			"width": 935,
+			"height": 945
+		},
+		{
+			"id": "note",
+			"type": "text",
+			"x": -560,
+			"y": -80,
+			"width": 471,
+			"height": 369,
+			"text": "# Demo-canvas\n\nTo login-varianter, et checkout-flow i tre skridt og login A i tre bredder.\n\n**Klik** på en frame for at bruge den. **Træk** i navnet over den for at flytte den. **Dobbeltklik** på navnet åbner filen."
+		},
+		{
+			"id": "noter",
+			"type": "file",
+			"file": "noter.md",
+			"x": -560,
+			"y": 380,
+			"width": 440,
+			"height": 340
+		},
+		{
+			"id": "spec",
+			"type": "link",
+			"url": "https://jsoncanvas.org/spec/1.0/",
+			"x": -560,
+			"y": 780,
+			"width": 440,
+			"height": 104
+		},
+		{
+			"id": "g-login",
+			"type": "group",
+			"label": "Login: to varianter",
+			"x": -20,
+			"y": -198,
+			"width": 940,
+			"height": 1004
+		},
+		{
+			"id": "login-a",
+			"type": "file",
+			"file": "screens/login-a.html",
+			"x": 25,
+			"y": -97,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "login-b",
+			"type": "file",
+			"file": "screens/login-b.html",
+			"x": 490,
+			"y": -118,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "g-checkout",
+			"type": "group",
+			"label": "Checkout-flow",
+			"color": "5",
+			"x": 1000,
+			"y": -80,
+			"width": 1570,
+			"height": 1004
+		},
+		{
+			"id": "cart",
+			"type": "file",
+			"file": "screens/checkout-1-cart.html",
+			"x": 1046,
+			"y": 0,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "delivery",
+			"type": "file",
+			"file": "screens/checkout-2-delivery.html",
+			"x": 1590,
+			"y": 0,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "done",
+			"type": "file",
+			"file": "screens/checkout-3-done.html",
+			"x": 2140,
+			"y": 0,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "g-responsive",
+			"type": "group",
+			"label": "Login A: mobil, tablet og desktop",
+			"x": 6,
+			"y": 1093,
+			"width": 2904,
+			"height": 1354
+		},
+		{
+			"id": "login-a-mobile",
+			"type": "file",
+			"file": "screens/login-a.html",
+			"x": 46,
+			"y": 1173,
+			"width": 390,
+			"height": 844
+		},
+		{
+			"id": "login-a-tablet",
+			"type": "file",
+			"file": "screens/login-a.html",
+			"x": 516,
+			"y": 1173,
+			"width": 801,
+			"height": 1087
+		},
+		{
+			"id": "login-a-desktop",
+			"type": "file",
+			"file": "screens/login-a.html",
+			"x": 1430,
+			"y": 1173,
+			"width": 1440,
+			"height": 900
+		}
+	],
+	"edges": [
+		{
+			"id": "e1",
+			"fromNode": "cart",
+			"fromSide": "right",
+			"toNode": "delivery",
+			"toSide": "left",
+			"label": "Gå til levering"
+		},
+		{
+			"id": "e2",
+			"fromNode": "delivery",
+			"fromSide": "right",
+			"toNode": "done",
+			"toSide": "left",
+			"label": "Gå til betaling"
+		}
+	]
+}

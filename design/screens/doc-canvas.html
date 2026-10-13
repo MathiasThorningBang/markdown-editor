@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Canvas file</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* An opened .canvas file (CanvasController + Web/canvas.html), here at about 45 % zoom:
+   muted background with a dot grid, frames with their name and width above them,
+   groups behind, arrows between flow steps, controls bottom right. */
+.board {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-muted);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--color-muted-foreground) 45%, transparent) 1px, transparent 1.2px);
+  background-size: 20px 20px;
+  overflow: hidden;
+}
+.world { position: absolute; inset: 0; transform: scale(0.88); transform-origin: 0 0; }
+.node { position: absolute; }
+.node .body { position: absolute; inset: 0; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-background); box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); overflow: hidden; }
+.node .label { position: absolute; left: 0; bottom: 100%; padding-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--color-secondary-foreground); white-space: nowrap; }
+.node .label .size { color: var(--color-muted-foreground); font-family: var(--font-mono); font-size: 12px; padding-left: 4px; }
+.node.selected .body { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.node.selected .label { color: var(--color-foreground); }
+.note .body { padding: 14px 16px; background: var(--color-card); border-radius: 12px; font: 14px/1.5 var(--font-body); }
+.note h3 { margin: 0 0 6px; font-size: 17px; }
+.note p { margin: 0; color: var(--color-secondary-foreground); }
+.group .body { border: 1px dashed color-mix(in srgb, var(--color-border) 70%, var(--color-muted-foreground)); background: transparent; box-shadow: none; border-radius: 16px; }
+.group.blue .body { border: 1px solid var(--color-nm-blue); background: color-mix(in srgb, var(--color-nm-blue) 8%, transparent); }
+.group .label { font-size: 15px; font-weight: 600; color: var(--color-foreground); }
+/* Wireframe stand-ins for the live HTML frames */
+.wire { padding: 18px 14px; display: grid; gap: 8px; }
+.wire i { display: block; height: 10px; border-radius: 3px; background: var(--color-muted); }
+.wire i.h { height: 16px; width: 60%; background: var(--color-border); }
+.wire i.btn { height: 22px; margin-top: 6px; background: var(--color-primary); }
+.wire i.short { width: 40%; }
+svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+svg.edges path { fill: none; stroke: var(--color-muted-foreground); stroke-width: 2; }
+.edge-label { position: absolute; transform: translate(-50%, -50%); padding: 2px 8px; border-radius: 6px; background: var(--color-muted); color: var(--color-secondary-foreground); font-size: 13px; white-space: nowrap; }
+.controls { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; }
+.controls span { padding: 4px 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-background); color: var(--color-secondary-foreground); font: 13px var(--font-mono); }
+.controls span:first-child { width: 30px; padding: 4px 0; text-align: center; font-family: -apple-system, system-ui, sans-serif; font-weight: 600; }
+</style>
+</head>
+<body data-active="demo.canvas" data-open="demo.canvas,why-markdown.md">
+<div class="content">
+  <div class="board">
+    <div class="world">
+    <div class="node note" style="left:40px;top:70px;width:200px;height:170px">
+      <div class="body"><h3>Demo-canvas</h3><p>To login-varianter og et checkout-flow i tre skridt.</p></div>
+    </div>
+
+    <div class="node group" style="left:270px;top:50px;width:420px;height:440px">
+      <div class="label">Login: to varianter</div><div class="body"></div>
+    </div>
+    <div class="node" style="left:290px;top:90px;width:176px;height:380px">
+      <div class="label">login-a.html<span class="size">390</span></div>
+      <div class="body wire"><i class="h"></i><i></i><i class="short"></i><i></i><i></i><i class="btn"></i></div>
+    </div>
+    <div class="node selected" style="left:494px;top:90px;width:176px;height:380px">
+      <div class="label">login-b.html<span class="size">390</span></div>
+      <div class="body wire"><i class="h"></i><i></i><i class="short"></i><i class="btn"></i></div>
+    </div>
+
+    <div class="node group blue" style="left:730px;top:50px;width:520px;height:440px">
+      <div class="label">Checkout-flow</div><div class="body"></div>
+    </div>
+    <div class="node" style="left:750px;top:90px;width:176px;height:380px">
+      <div class="label">checkout-1-cart.html<span class="size">390</span></div>
+      <div class="body wire"><i class="h"></i><i></i><i></i><i></i><i class="btn"></i></div>
+    </div>
+    <div class="node" style="left:1054px;top:90px;width:176px;height:380px">
+      <div class="label">checkout-2-delivery.html<span class="size">390</span></div>
+      <div class="body wire"><i class="h"></i><i></i><i class="short"></i><i></i><i class="btn"></i></div>
+    </div>
+
+    <svg class="edges"><path d="M926 280 C 990 280, 990 280, 1054 280"/><path d="M1046 274 L1054 280 L1046 286" style="fill:var(--color-muted-foreground);stroke:none"/></svg>
+    <div class="edge-label" style="left:990px;top:280px">Gå til levering</div>
+    </div>
+
+    <div class="controls"><span title="Shortcuts (?)">?</span><span title="Fit to screen (⌘0)">45%</span></div>
+  </div>
+</div>
+<script src="chrome.js"></script>
+</body>
+</html>

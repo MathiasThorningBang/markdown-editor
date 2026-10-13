@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>First launch</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* No projects and no open files: MainWindowView.emptyState covers the whole window. */
+.launch { position: fixed; inset: 0; background: var(--color-background); }
+.launch .traffic { position: absolute; left: 4px; top: 0; }
+</style>
+</head>
+<body>
+<div class="launch">
+  <div class="traffic"><span></span><span></span><span></span></div>
+  <div class="placeholder">
+    Open a .md file or a folder
+    <span class="button">Open…</span>
+  </div>
+</div>
+</body>
+</html>

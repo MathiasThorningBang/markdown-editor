@@ -15,6 +15,8 @@ Alt kører offline.
 - Flow, proces, tidsplan eller struktur → ```mermaid.
 - Tal og data (bar, line, doughnut), KPI-kort, styrede grids → ```html.
 - Et helt visuelt dashboard, der skal stå alene → .html-fil.
+- Prototyper, wireframes, skærmflows eller varianter side om side → et `.canvas`.
+  Se skill'en `md-canvas`.
 
 Prosaen skal altid stå i markdown, så filen også kan læses af andre modeller og
 på GitHub. Diagrammer og HTML-blokke supplerer teksten. Skriv konklusionen i

@@ -1,6 +1,6 @@
 // Theme runtime shared by ```html previews (sandboxed iframes, via the editor
 // bundle) and opened .html files (WKUserScript from Swift). Runs before any
-// page content; expects window.__mdTheme = { primary, fontBody, fontMono, fragment }.
+// page content; expects window.__mdTheme = { primary, fontBody, fontMono, fragment, canvas }.
 (() => {
   const theme = window.__mdTheme || {}
 
@@ -76,8 +76,16 @@
     })
   }
   // Charts resolved their colors at load; for .html files a fresh load is simplest.
-  // (Fragments are re-mounted by the editor instead.)
-  if (!theme.fragment) dark.addEventListener('change', () => location.reload())
+  // (Fragments are re-mounted by the editor instead; the canvas page itself
+  // follows through CSS and keeps its pan/zoom, while its frames reload.)
+  const canvasPage = theme.canvas && window.top === window
+  if (!theme.fragment && !canvasPage) dark.addEventListener('change', () => location.reload())
+  // A live canvas frame has the keyboard: hand Esc to the canvas so it can let go.
+  if (theme.canvas && !canvasPage) {
+    addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') parent.postMessage({ mdCanvasEscape: true }, '*')
+    })
+  }
 
   if (theme.fragment && window.parent !== window) {
     // Measure the body, not the document: the document is never shorter than the

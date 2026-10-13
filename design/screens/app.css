@@ -1,0 +1,215 @@
+/* The MarkdownEditor window, shared by every screen in design/app.canvas.
+   Tokens (--color-*, --font-body, --font-mono) come from the app's runtime,
+   so the screens follow light/dark mode and the user's accent and fonts.
+   Native chrome (sidebar, toolbar, settings) uses the system font like SwiftUI does;
+   document content uses --font-body.
+   Source of truth for each part: UI/MainWindowView.swift, UI/SidebarView.swift,
+   UI/SettingsView.swift, Web/editor.html, Web/canvas.html. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: 13px/1.4 -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+.window { display: flex; height: 100vh; }
+
+/* Sidebar: NavigationSplitView column, 230 px ideal (180–340).
+   Light: system material. Dark: solid #212121 (NMColors.darkSidebar = card). */
+.sidebar {
+  width: 230px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-muted);
+}
+@media (prefers-color-scheme: dark) { .sidebar { background: var(--color-card); } }
+
+/* Window controls. Fixed system colors, the same in both modes. */
+.traffic { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 16px; margin-bottom: 4px; }
+.traffic span:not(.toggle) { width: 12px; height: 12px; border-radius: 50%; }
+.traffic span:nth-child(1) { background: #ff5f57; }
+.traffic span:nth-child(2) { background: #febc2e; }
+.traffic span:nth-child(3) { background: #28c840; }
+/* Sidebar toggle (sidebar.left) next to the window controls */
+.traffic .toggle { margin-left: 26px; display: grid; color: var(--color-secondary-foreground); }
+.traffic .toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+
+.section { padding: 0 8px 14px; }
+/* SidebarHeader: 12 px semibold + file count */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 10px 4px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-secondary-foreground);
+}
+.section-header { gap: 8px; }
+.section-header > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.section-header .count { flex: none; font-weight: 400; }
+/* Header variants (see the "Sidebar: stier" group on app.canvas) */
+.section-header .hint, .section-header .cut { font-weight: 400; color: var(--color-muted-foreground); }
+.section-header.two > span:first-child { display: grid; }
+.section-header .cut { direction: rtl; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* SidebarRow: 13 px, active row tinted with the accent at 14 % */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  margin-left: 4px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.row:hover { background: color-mix(in srgb, var(--color-foreground) 5%, transparent); }
+/* Selected row: a neutral gray (black or white at low opacity), not the accent:
+   the accent tint gave too little contrast against the colored tags. */
+.row.active { background: color-mix(in srgb, var(--color-foreground) 9%, transparent); font-weight: 500; }
+@media (prefers-color-scheme: dark) { .row.active { background: color-mix(in srgb, var(--color-foreground) 11%, transparent); } }
+.row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+/* OpenDot: file is open; accent while it has unsaved changes */
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-muted-foreground); flex: none; }
+.dot.dirty { background: var(--color-primary); }
+
+/* File-type tags (design in progress, see the "Sidebar" group on app.canvas).
+   md follows NM blue; html and canvas are the canvas presets orange and purple,
+   lifted in dark mode. */
+:root { --type-md: var(--color-nm-blue); --type-html: #c4621c; --type-canvas: #6f52cc; }
+@media (prefers-color-scheme: dark) { :root { --type-html: #e8914f; --type-canvas: #a08ae8; } }
+.tag {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--type-md);
+  background: color-mix(in srgb, var(--type-md) 14%, transparent);
+}
+.tag-html { color: var(--type-html); background: color-mix(in srgb, var(--type-html) 14%, transparent); }
+.tag-canvas { color: var(--type-canvas); background: color-mix(in srgb, var(--type-canvas) 14%, transparent); }
+.v-left .tag { width: 58px; padding: 0; text-align: center; text-transform: uppercase; }
+.v-left .dot { margin-left: 2px; }
+.dot.dot-md { background: var(--type-md); }
+.dot.dot-html { background: var(--type-html); }
+.dot.dot-canvas { background: var(--type-canvas); }
+
+/* A frame showing only the sidebar */
+.sidebar-only .sidebar { width: 100%; }
+.sidebar-only .detail { display: none; }
+
+/* Detail column: toolbar + one document view */
+.detail { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+
+.toolbar {
+  height: 52px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 16px;
+  /* The window's toolbar bar: a step lighter than the content, with a hairline below */
+  background: color-mix(in srgb, var(--color-foreground) 4%, var(--color-background));
+  border-bottom: 1px solid var(--color-border);
+}
+@media (prefers-color-scheme: dark) {
+  .toolbar { background: color-mix(in srgb, var(--color-foreground) 14%, var(--color-background)); border-bottom-color: color-mix(in srgb, var(--color-foreground) 6%, var(--color-background)); }
+}
+.title { flex: 1; min-width: 0; line-height: 1.2; }
+.title strong { display: block; font-size: 14px; font-weight: 700; }
+/* navigationSubtitle: word/token count, markdown only. The system draws it at 11 pt. */
+.title small { display: block; font-size: 12px; color: var(--color-secondary-foreground); }
+
+/* Toolbar items: theme toggle, settings, copy path */
+.tools { display: flex; gap: 2px; }
+.tools a {
+  width: 32px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--color-foreground);
+}
+.tools a:hover { background: var(--color-muted); }
+.tools a.on { color: var(--color-primary); }
+.tools svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.content { flex: 1; min-height: 0; overflow: auto; position: relative; }
+
+/* Centered placeholder text, 16 px secondary (empty states) */
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  font-size: 16px;
+  color: var(--color-secondary-foreground);
+}
+.button {
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-size: 13px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+/* Toast: capsule at the bottom, foreground at 92 % */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-foreground) 92%, transparent);
+  color: var(--color-background);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Markdown document: editor.html's 1200 px column with 32/24 px padding,
+   plus Crepe's own ProseMirror padding of 60/120 px */
+.doc {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 92px 144px 180px;
+  font: 16px/26px var(--font-body);
+}
+.doc h1, .doc h2, .doc h3 { font-family: var(--font-heading, var(--font-body)); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.doc h1 { font-size: 32px; line-height: 40px; letter-spacing: -0.02em; }
+.doc h2 { font-size: 24px; line-height: 32px; margin-top: 36px; }
+.doc h3 { font-size: 20px; line-height: 28px; margin-top: 28px; }
+.doc p { margin: 0; padding: 8px 0; }
+.doc a { color: var(--color-nm-blue); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.doc code { font-family: var(--font-mono); font-size: 0.9em; padding: 0 5px; border-radius: 4px; background: var(--color-muted); }
+.doc ul { margin: 0; padding: 8px 0 8px 24px; }
+.doc li { padding: 2px 0; }
+.doc blockquote { margin: 8px 0; padding: 0 0 0 16px; border-left: 3px solid var(--color-border); color: var(--color-secondary-foreground); }
+.doc table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+.doc th, .doc td { border: 1px solid var(--color-border); padding: 8px 12px; text-align: left; }
+.doc th { background: var(--color-muted); font-weight: 600; }
+.doc pre {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  font: 14px/1.6 var(--font-mono);
+  overflow: auto;
+}
+.doc pre .lang { display: block; margin-bottom: 6px; font-family: -apple-system, system-ui, sans-serif; font-size: 12px; color: var(--color-muted-foreground); }
+/* ```html preview: a sandboxed iframe right in the document */
+.preview { margin: 16px 0; }

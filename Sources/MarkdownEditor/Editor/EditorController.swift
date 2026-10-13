@@ -160,12 +160,13 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         }
         NSWorkspace.shared.open(url)
     }
+}
 
-    private func jsonString(_ string: String) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: [string])
-        let array = String(data: data, encoding: .utf8)!
-        return String(array.dropFirst().dropLast())
-    }
+/// A string as a JavaScript string literal, for evaluateJavaScript.
+func jsonString(_ string: String) -> String {
+    let data = try! JSONSerialization.data(withJSONObject: [string])
+    let array = String(data: data, encoding: .utf8)!
+    return String(array.dropFirst().dropLast())
 }
 
 /// Web view whose context menu starts with "Copy Path" and "Copy as Reference"
@@ -173,6 +174,31 @@ final class EditorController: NSObject, WKNavigationDelegate, WKScriptMessageHan
 final class EditorWebView: WKWebView {
     var fileURL: () -> URL? = { nil }
     var copyReference: (String) -> Void = { _ in }
+    /// Takes over file drops from Finder (the canvas), with the drop point in
+    /// page coordinates. Returns false to leave the drop to WebKit.
+    var fileDrop: (([URL], CGPoint) -> Bool)?
+
+    private func droppedFiles(_ sender: NSDraggingInfo) -> [URL] {
+        guard fileDrop != nil else { return [] }
+        return sender.draggingPasteboard.readObjects(
+            forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+    }
+
+    // Without these, WebKit would handle a dropped file by navigating to it.
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        droppedFiles(sender).isEmpty ? super.draggingEntered(sender) : .copy
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        droppedFiles(sender).isEmpty ? super.draggingUpdated(sender) : .copy
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let files = droppedFiles(sender)
+        guard let fileDrop, !files.isEmpty else { return super.performDragOperation(sender) }
+        let point = convert(sender.draggingLocation, from: nil)
+        return fileDrop(files, CGPoint(x: point.x, y: isFlipped ? point.y : bounds.height - point.y))
+    }
 
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
         super.willOpenMenu(menu, with: event)
@@ -220,12 +246,17 @@ final class LocalFileSchemeHandler: NSObject, WKURLSchemeHandler {
             let data = try Data(contentsOf: fileURL)
             let mime = UTType(filenameExtension: fileURL.pathExtension)?.preferredMIMEType
                 ?? "application/octet-stream"
-            let response = URLResponse(
+            // no-store: a reloaded page must see edited CSS/JS next to it, not a cached copy.
+            let response = HTTPURLResponse(
                 url: url,
-                mimeType: mime,
-                expectedContentLength: data.count,
-                textEncodingName: nil
-            )
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: [
+                    "Content-Type": mime,
+                    "Content-Length": String(data.count),
+                    "Cache-Control": "no-store",
+                ]
+            )!
             urlSchemeTask.didReceive(response)
             urlSchemeTask.didReceive(data)
             urlSchemeTask.didFinish()

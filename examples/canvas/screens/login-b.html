@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Log ind uden adgangskode</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--color-background);color:var(--color-foreground);font-family:var(--font-body)}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.layout{width:100%;max-width:1040px;display:grid;gap:32px;justify-items:center}
+.pitch{display:none}
+.card{width:100%;max-width:400px;background:var(--color-card);border:1px solid var(--color-border);border-radius:12px;padding:24px}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;margin-bottom:24px}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--color-nm-blue)}
+h1{font-size:24px;line-height:1.25;margin:0 0 8px}
+.lead{margin:0 0 24px;font-size:16px;color:var(--color-muted-foreground)}
+label{display:block;font-size:16px;font-weight:500;margin-bottom:6px}
+input{display:block;width:100%;height:48px;padding:0 14px;margin-bottom:16px;font:inherit;font-size:16px;color:var(--color-foreground);background:var(--color-background);border:1px solid var(--color-border);border-radius:8px}
+input:focus{outline:2px solid var(--color-primary);outline-offset:1px}
+button{display:block;width:100%;height:48px;border-radius:8px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.primary{border:0;background:var(--color-primary);color:#fff}
+.secondary{border:1px solid var(--color-border);background:var(--color-card);color:var(--color-foreground)}
+button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:16px;color:var(--color-muted-foreground)}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--color-border)}
+.hint{margin:16px 0 0;font-size:16px;color:var(--color-muted-foreground);text-align:center}
+.pitch h2{font-size:32px;line-height:1.2;margin:0 0 16px}
+.pitch p{margin:0 0 24px;font-size:18px;line-height:1.5;color:var(--color-muted-foreground)}
+.pitch .stat{display:inline-block;padding:12px 16px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-card);font-family:var(--font-mono);font-size:16px}
+@media (min-width:834px){
+  .layout{grid-template-columns:1fr 400px;justify-items:stretch;align-items:center}
+  .pitch{display:block;padding:32px}
+  .card{max-width:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="layout">
+    <section class="pitch" aria-label="Om platformen">
+      <h2>Ingen adgangskode at huske</h2>
+      <p>Vi sender et engangslink til din e-mail. Klik på det, og du er inde.</p>
+      <span class="stat">Link gyldigt i 15 minutter</span>
+    </section>
+
+    <form class="card" action="#" onsubmit="return false">
+      <div class="brand"><span class="mark" aria-hidden="true"></span>Nørgård Mikkelsen</div>
+      <h1>Log ind</h1>
+      <p class="lead">Indtast din e-mail, så sender vi dig et login-link.</p>
+
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="email" placeholder="navn@firma.dk">
+
+      <button class="primary" type="submit">Send login-link</button>
+
+      <div class="divider">eller</div>
+
+      <button class="secondary" type="button">Fortsæt med Google</button>
+
+      <p class="hint">Har du ikke en konto? Kontakt din administrator.</p>
+    </form>
+  </div>
+</main>
+</body>
+</html>

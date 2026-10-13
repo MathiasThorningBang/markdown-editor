@@ -13,6 +13,8 @@ final class EditorPool {
         let controller: any DocumentViewController
         if let url = doc.url, doc.isHTML {
             controller = HTMLViewerController(document: doc, url: url)
+        } else if doc.isCanvas {
+            controller = CanvasController(document: doc)
         } else {
             controller = EditorController(document: doc)
         }

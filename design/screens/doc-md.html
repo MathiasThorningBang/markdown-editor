@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Markdown file</title>
+<link rel="stylesheet" href="app.css">
+<style>
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.kpi { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 10px; padding: 16px; }
+.kpi strong { display: block; font-size: 30px; line-height: 1.2; }
+.kpi strong.accent { color: var(--color-primary); }
+.kpi span { display: block; margin-top: 6px; color: var(--color-secondary-foreground); font-size: 14px; line-height: 1.4; }
+</style>
+</head>
+<body data-active="why-markdown.md" data-open="why-markdown.md,demo.canvas" data-dirty="why-markdown.md" data-subtitle="1,184 words · ≈ 2.1k tokens">
+<div class="content">
+  <article class="doc">
+    <h1>Why I work in markdown</h1>
+    <p>Most of what I hand to an AI agent ends up as a <code>.md</code> file, and so does most of what I get back: briefs, plans, research notes, reports. The README has the short version of why. This is the longer one, with the numbers behind it.</p>
+    <p>It doubles as a demo. Every chart and diagram below is written as text inside this file, so an agent reads and edits them the same way it reads the prose. Click <strong>Edit</strong> on a block to see its source.</p>
+
+    <div class="preview kpis">
+      <div class="kpi"><strong class="accent">80 %</strong><span>fewer tokens for Cloudflare's own blog post as markdown instead of HTML</span></div>
+      <div class="kpi"><strong>~6x</strong><span>tokens when a model reads my raw work files instead of the same content in markdown</span></div>
+      <div class="kpi"><strong>1,500–3,000</strong><span>text tokens per PDF page in the Claude API, before the page image is counted</span></div>
+      <div class="kpi"><strong>60k+</strong><span>open-source projects with an AGENTS.md file</span></div>
+    </div>
+
+    <h2>Every format has a price</h2>
+    <p>A model doesn't read files. It reads tokens, and every tag, style attribute and page image is paid for in tokens before the model gets to the content.</p>
+    <p>Cloudflare measured it on their own announcement post: 16,180 tokens as HTML, 3,150 as markdown. It's one page picked by the vendor, so treat it as an example and not a <a href="#">benchmark</a>.</p>
+
+    <table>
+      <tr><th>Format</th><th>Tokens</th><th>Readable as plain text</th></tr>
+      <tr><td>Markdown</td><td>3,150</td><td>Yes</td></tr>
+      <tr><td>HTML</td><td>16,180</td><td>Barely</td></tr>
+      <tr><td>PDF, per page</td><td>1,500–3,000</td><td>No</td></tr>
+    </table>
+
+    <blockquote><p>Treat it as an example and not a benchmark.</p></blockquote>
+
+    <pre><span class="lang">sh</span>open -a MarkdownEditor why-markdown.md</pre>
+  </article>
+</div>
+<script src="chrome.js"></script>
+</body>
+</html>

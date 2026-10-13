@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="canvas.bundle.css">
+  <style>
+    /* Color and font tokens come from preview-runtime.js, injected by Swift
+       (CanvasController), so the canvas and its frames share one copy. */
+    :root {
+      /* JSON Canvas color presets 1-6: red, orange, yellow, green, cyan, purple */
+      --canvas-1: var(--color-primary);
+      --canvas-2: #e07a2e;
+      --canvas-3: #c99a2e;
+      --canvas-4: #2f9e6b;
+      --canvas-5: var(--color-nm-blue);
+      --canvas-6: #7c5cd6;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--color-muted);
+      color: var(--color-foreground);
+      font: 16px/1.5 var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      cursor: default;
+      background-image: radial-gradient(circle, color-mix(in srgb, var(--color-muted-foreground) 45%, transparent) 1px, transparent 1.2px);
+      touch-action: none;
+      /* Dragging nodes must never start a text or image selection */
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    #viewport img { -webkit-user-drag: none; }
+    body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
+    body.dragging iframe { pointer-events: none; }
+
+    #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    #edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+    #edges path { fill: none; stroke-width: 2; }
+    #edges marker path { stroke: none; }
+
+    .node {
+      position: absolute;
+      box-sizing: border-box;
+      --node-color: var(--color-border);
+    }
+    .node > .body {
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--node-color);
+      background: var(--color-background);
+    }
+    .node.selected > .body {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* Frames: a live web page, at rest behind a shield so scrolling pans the canvas */
+    .frame > .body { border-radius: 8px; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+    .frame iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--color-background); }
+    .frame .shield { position: absolute; inset: 0; cursor: pointer; }
+    .frame.live .shield { display: none; }
+
+    .label {
+      position: absolute;
+      left: 0;
+      bottom: 100%;
+      max-width: 100%;
+      padding-bottom: calc(8px / var(--z, 1));
+      display: flex;
+      font-size: calc(13px / var(--z, 1));
+      font-weight: 500;
+      color: var(--color-secondary-foreground);
+      white-space: nowrap;
+      cursor: grab;
+      user-select: none;
+    }
+    .label span:first-child { overflow: hidden; text-overflow: ellipsis; }
+    .label .size { color: var(--color-muted-foreground); font-family: var(--font-mono); font-size: 0.93em; padding-left: 0.15em; }
+    .node.selected > .label { color: var(--color-foreground); }
+
+    /* Cards: notes, .md files, links and images */
+    .card { cursor: grab; }
+    .card > .body { padding: 16px 20px; background: var(--color-card); }
+    .card.live > .body { overflow: auto; cursor: auto; }
+    .card.image > .body { padding: 0; background: transparent; }
+    .card.image img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .node-file.card:not(.image) > .body,
+    .node-text > .body { border-left: 3px solid var(--node-color); }
+    .node-text:not([style*="--node-color"]) > .body,
+    .node-file.card:not([style*="--node-color"]) > .body { border-left-width: 1px; }
+
+    .markdown { font-size: 16px; line-height: 1.55; user-select: none; }
+    .markdown > :first-child { margin-top: 0; }
+    .markdown > :last-child { margin-bottom: 0; }
+    .markdown h1, .markdown h2, .markdown h3 { line-height: 1.25; margin: 0.9em 0 0.4em; }
+    .markdown h1 { font-size: 24px; }
+    .markdown h2 { font-size: 20px; }
+    .markdown h3 { font-size: 17px; }
+    .markdown p, .markdown ul, .markdown ol { margin: 0.5em 0; }
+    .markdown ul, .markdown ol { padding-left: 1.3em; }
+    .markdown a { color: var(--color-primary); }
+    .markdown code { font-family: var(--font-mono); font-size: 14px; background: var(--color-muted); border-radius: 4px; padding: 1px 4px; }
+    .markdown img { max-width: 100%; }
+    .markdown blockquote { margin: 0.5em 0; padding-left: 12px; border-left: 3px solid var(--color-border); color: var(--color-secondary-foreground); }
+
+    .link-host { font-weight: 600; }
+    .link-url { color: var(--color-muted-foreground); font-size: 14px; word-break: break-all; }
+
+    /* Groups: behind everything, labeled by their name */
+    .node-group { z-index: -1; }
+    .node-group > .body {
+      border: 1px dashed color-mix(in srgb, var(--node-color) 70%, var(--color-muted-foreground));
+      background: color-mix(in srgb, var(--node-color) 8%, transparent);
+      border-radius: 16px;
+    }
+    .node-group[style*="--node-color"] > .body { border-style: solid; }
+    .node-group > .label { font-size: calc(15px / var(--z, 1)); font-weight: 600; color: var(--color-foreground); max-width: none; }
+    .label [contenteditable="plaintext-only"] {
+      -webkit-user-select: text;
+      user-select: text;
+      cursor: text;
+      outline: none;
+      border-bottom: 2px solid var(--color-primary);
+      overflow: visible;
+    }
+
+    /* Color swatches next to a selected group's name */
+    .palette {
+      position: absolute;
+      right: 0;
+      bottom: 100%;
+      padding-bottom: calc(8px / var(--z, 1));
+      display: none;
+      gap: calc(6px / var(--z, 1));
+    }
+    .node-group.live > .palette { display: flex; }
+    .palette span {
+      width: calc(16px / var(--z, 1));
+      height: calc(16px / var(--z, 1));
+      border-radius: 50%;
+      cursor: pointer;
+      box-sizing: border-box;
+      border: 1px solid var(--color-border);
+    }
+    .palette span[data-color=""] { background: var(--color-background); border-style: dashed; border-color: var(--color-muted-foreground); }
+
+    /* Marquee selection, and the box drawn with ⌥ for a new group */
+    #marquee {
+      position: fixed;
+      border: 1px solid var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      pointer-events: none;
+    }
+    #marquee.draw { border-style: dashed; border-radius: 16px; }
+
+    .resize {
+      position: absolute;
+      right: -6px;
+      bottom: -6px;
+      width: 14px;
+      height: 14px;
+      cursor: nwse-resize;
+      display: none;
+    }
+    .node.live > .resize { display: block; }
+    .resize::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-right: 2px solid var(--color-primary);
+      border-bottom: 2px solid var(--color-primary);
+    }
+
+    .edge-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--color-muted);
+      color: var(--color-secondary-foreground);
+      font-size: 14px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #controls {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    #help {
+      position: fixed;
+      right: 16px;
+      bottom: 56px;
+      width: 300px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      background: var(--color-background);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+      font-size: 14px;
+      user-select: none;
+    }
+    #help dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+    #help dt { font-weight: 500; color: var(--color-secondary-foreground); white-space: nowrap; }
+    #help dd { margin: 0; }
+    #zoom, #help-button {
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: var(--color-background);
+      color: var(--color-secondary-foreground);
+      font: 13px var(--font-mono);
+      cursor: pointer;
+      user-select: none;
+    }
+    #help-button { width: 30px; box-sizing: border-box; padding: 4px 0; text-align: center; font-family: var(--font-body); font-weight: 600; }
+
+    #error {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--color-primary);
+      background: var(--color-background);
+      font-size: 14px;
+    }
+
+    #empty {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--color-muted-foreground);
+      pointer-events: none;
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="world"><svg id="edges"></svg></div>
+  </div>
+  <div id="marquee" hidden></div>
+  <div id="empty" hidden>This canvas is empty. Ask your agent to add frames.</div>
+  <div id="help" hidden>
+    <dl>
+      <dt>Drag</dt><dd>Select</dd>
+      <dt>⇧ Click</dt><dd>Add to selection</dd>
+      <dt>⌘G</dt><dd>Group selection</dd>
+      <dt>⌥ Drag</dt><dd>Draw a group</dd>
+      <dt>Double-click</dt><dd>Rename group, open file</dd>
+      <dt>⌫ / ⇧⌘G</dt><dd>Remove group, keep contents</dd>
+      <dt>⌘Z / ⇧⌘Z</dt><dd>Undo / redo</dd>
+      <dt>Space drag</dt><dd>Pan (or two fingers)</dd>
+      <dt>Pinch, ⌘+ ⌘−</dt><dd>Zoom</dd>
+      <dt>⌘0</dt><dd>Fit to screen</dd>
+      <dt>Esc</dt><dd>Deselect, let go of a frame</dd>
+    </dl>
+  </div>
+  <div id="controls">
+    <div id="help-button" title="Shortcuts (?)">?</div>
+    <div id="zoom" title="Fit to screen (⌘0)">100%</div>
+  </div>
+  <div id="error" hidden></div>
+  <script src="canvas.bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Settings</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* SettingsView: a page in the detail column, 640 px wide, 72 px from the top. */
+.settings { max-width: 704px; margin: 0 auto; padding: 72px 32px 48px; }
+.settings header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 40px; }
+.settings h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.4px; }
+.close { width: 28px; height: 28px; display: grid; place-items: center; color: var(--color-secondary-foreground); font-size: 15px; font-weight: 600; }
+.settings h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.card { padding: 0 18px; margin-bottom: 16px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-card); }
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px 0; font-size: 14px; font-weight: 500; }
+.setting + .setting { border-top: 1px solid var(--color-border); }
+
+/* ModeThumbnail: a miniature window per mode, System split light/dark */
+.modes { display: flex; gap: 12px; }
+.mode { display: grid; justify-items: center; gap: 6px; font-size: 12px; font-weight: 400; color: var(--color-secondary-foreground); }
+.mode.on { font-weight: 600; color: var(--color-foreground); }
+.mode .frame { padding: 3px; border-radius: 10px; border: 1px solid var(--color-border); }
+.mode.on .frame { border: 2px solid var(--color-primary); padding: 2px; }
+.mini { width: 84px; height: 56px; border-radius: 7px; overflow: hidden; display: flex; position: relative; }
+/* The thumbnails show both themes regardless of the current one, so they use the
+   literal token values from MiniWindow in SettingsView.swift. */
+.mini.light { background: #ffffff; --side: #f5f5f5; --ink: #171717; --line: #d4d4d4; }
+.mini.dark { background: #181818; --side: #212121; --ink: #ffffff; --line: #3a3a3a; }
+.mini aside { width: 22px; background: var(--side); }
+.mini div { padding: 0 9px; display: grid; align-content: center; gap: 5px; }
+.mini b { display: block; height: 4px; width: 30px; border-radius: 2px; background: var(--ink); }
+.mini s { display: block; height: 3px; border-radius: 2px; background: var(--line); }
+.mini s.a { width: 20px; background: var(--color-primary); }
+.mini.split { background: none; }
+.mini.split .half { position: absolute; inset: 0; padding: 0; display: flex; }
+.mini.split .half + .half { clip-path: inset(0 0 0 50%); }
+
+.swatches { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; padding: 3px; border: 2px solid transparent; }
+.swatch i { display: block; width: 100%; height: 100%; border-radius: 50%; }
+.swatch.on { border-color: var(--color-primary); }
+.hex { display: flex; align-items: center; gap: 8px; margin-left: 12px; padding: 4px 10px 4px 6px; border-radius: 999px; border: 1px solid var(--color-border); font: 12px var(--font-mono); color: var(--color-secondary-foreground); }
+.hex i { width: 20px; height: 20px; border-radius: 4px; background: var(--color-primary); }
+
+.picker { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 10px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-background); font-size: 13px; font-weight: 400; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); }
+.picker::after { content: "⌄"; color: var(--color-secondary-foreground); }
+.reset { text-align: right; padding-top: 4px; font-size: 13px; color: var(--color-secondary-foreground); }
+</style>
+</head>
+<body data-active="why-markdown.md" data-open="why-markdown.md,demo.canvas" data-settings>
+<div class="content">
+  <section class="settings">
+    <header><h1>Appearance</h1><a class="close" href="doc-md.html" title="Close settings (Esc)">✕</a></header>
+
+    <h2>Visual style</h2>
+    <div class="card">
+      <div class="setting">Mode
+        <div class="modes">
+          <div class="mode on"><div class="frame"><div class="mini split">
+            <div class="half mini light"><aside></aside><div><b></b><s style="width:44px"></s><s style="width:38px"></s><s class="a"></s></div></div>
+            <div class="half mini dark"><aside></aside><div><b></b><s style="width:44px"></s><s style="width:38px"></s><s class="a"></s></div></div>
+          </div></div>System</div>
+          <div class="mode"><div class="frame"><div class="mini light"><aside></aside><div><b></b><s style="width:44px"></s><s style="width:38px"></s><s class="a"></s></div></div></div>Light</div>
+          <div class="mode"><div class="frame"><div class="mini dark"><aside></aside><div><b></b><s style="width:44px"></s><s style="width:38px"></s><s class="a"></s></div></div></div>Dark</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting">Accent color
+        <div class="swatches">
+          <!-- AccentPreset.all: fixed preset values, the selected one is the current accent -->
+          <span class="swatch on" title="Red"><i style="background:#df475c"></i></span>
+          <span class="swatch" title="Orange"><i style="background:#e07a2e"></i></span>
+          <span class="swatch" title="Green"><i style="background:#2f9e6b"></i></span>
+          <span class="swatch" title="Teal"><i style="background:#1f8a8a"></i></span>
+          <span class="swatch" title="Blue"><i style="background:#2e7ab5"></i></span>
+          <span class="swatch" title="Purple"><i style="background:#7c5cd6"></i></span>
+          <span class="hex" title="Pick your own color"><i></i>#DF475C</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting">Headings <span class="picker">DM Sans</span></div>
+      <div class="setting">Body text <span class="picker">DM Sans</span></div>
+      <div class="setting">Code <span class="picker">Geist Mono</span></div>
+    </div>
+
+    <div class="reset">Reset to defaults</div>
+  </section>
+</div>
+<script src="chrome.js"></script>
+</body>
+</html>

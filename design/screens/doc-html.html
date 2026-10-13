@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>HTML file</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* An opened .html file fills the detail column as its own page (HTMLViewerController).
+   This stands in for examples/markdown-in-numbers.html. */
+.page { padding: 40px 48px; font: 16px/1.6 var(--font-body); max-width: 1000px; }
+.page h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; }
+.page h2 { font-size: 22px; margin: 36px 0 12px; }
+.page .lead { color: var(--color-secondary-foreground); margin: 0; }
+.bars { display: grid; gap: 10px; }
+.bar { display: grid; grid-template-columns: 120px 1fr 80px; align-items: center; gap: 12px; font-size: 14px; }
+.bar i { display: block; height: 22px; border-radius: 4px; background: var(--color-border); }
+.bar i.accent { background: var(--color-primary); }
+.bar b { font: 14px var(--font-mono); font-weight: 400; color: var(--color-secondary-foreground); }
+</style>
+</head>
+<body data-active="markdown-in-numbers.html" data-open="markdown-in-numbers.html,why-markdown.md">
+<div class="content">
+  <section class="page">
+    <h1>Markdown in numbers</h1>
+    <p class="lead">The same blog post, counted in tokens.</p>
+    <h2>One blog post, two formats</h2>
+    <div class="bars">
+      <div class="bar"><span>HTML</span><i style="width:100%"></i><b>16,180</b></div>
+      <div class="bar"><span>Markdown</span><i class="accent" style="width:19.5%"></i><b>3,150</b></div>
+    </div>
+    <h2>Tables: markdown isn't the floor</h2>
+    <p class="lead">For data, CSV is cheaper still. Markdown wins when people read it too.</p>
+  </section>
+  <div class="toast">Path copied</div>
+</div>
+<script src="chrome.js"></script>
+</body>
+</html>

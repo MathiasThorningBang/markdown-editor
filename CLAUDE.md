@@ -30,8 +30,21 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
 
 * Swift only accepts script messages from the main frame.
 
+* `.canvas` (JSON Canvas): `CanvasController` + `Web/canvas.html` + `editor/src/canvas.js`
+  (bundled to `canvas.bundle.js/.css`). The canvas JSON is the document's text, so
+  autosave/reload/conflicts are `OpenDocument`'s. The page posts the whole JSON on
+  move/resize and must never post on load. Frames are `mdfile://` iframes with
+  `sandbox="allow-scripts allow-forms"`; tokens come from the injected runtime
+  (`canvas: true` keeps the canvas page from reloading on dark mode). Files the nodes
+  point at are checked via `OpenDocument.onDiskCheck` on the session's 1 s loop.
+
 * `skills/md-editor/SKILL.md` tells agents what the app renders and how to
-  open files in it. Update it when previews or agent features change.
+  open files in it; `skills/md-canvas/SKILL.md` does the same for canvases. Update
+  them when previews, canvas or agent features change.
+
+* `design/app.canvas` is the app itself as HTML screens, for trying UI changes
+  before building them. The window chrome lives once in `design/screens/chrome.js`
+  and `app.css`. Keep it in step when the UI changes.
 
 * Open files sync with disk: `SessionModel` checks each file's modification date
   once a second. Clean docs reload (`window.setMarkdown`), dirty ones ask.

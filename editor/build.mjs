@@ -29,4 +29,15 @@ await esbuild.build({
   },
 })
 
-console.log('Built editor.bundle.js/.css')
+// The .canvas page (CanvasController). Its tokens and Chart.js come from the
+// injected runtime, so only its own code and fonts are bundled.
+await esbuild.build({
+  entryPoints: ['src/canvas.js'],
+  bundle: true,
+  minify: true,
+  format: 'iife',
+  outfile: '../Sources/MarkdownEditor/Web/canvas.bundle.js',
+  loader: { '.woff': 'dataurl', '.woff2': 'dataurl' },
+})
+
+console.log('Built editor.bundle.js/.css and canvas.bundle.js/.css')

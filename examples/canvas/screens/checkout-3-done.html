@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Tak for din ordre</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--color-background);color:var(--color-foreground);font-family:var(--font-body);font-size:16px}
+.screen{max-width:390px;min-height:100vh;margin:0 auto;padding:32px 16px 16px;display:flex;flex-direction:column;gap:16px}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding-top:16px}
+.badge{width:72px;height:72px;border-radius:50%;background:var(--color-primary);color:var(--color-card);display:grid;place-items:center}
+.badge svg{width:36px;height:36px}
+h1{margin:8px 0 0;font-size:24px;line-height:1.25}
+.lead{margin:0;color:var(--color-muted-foreground)}
+.card{background:var(--color-card);border:1px solid var(--color-border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.order{display:flex;justify-content:space-between;align-items:center;font-size:16px}
+.order span:first-child{color:var(--color-muted-foreground)}
+.mono{font-family:var(--font-mono);font-size:16px;font-weight:600}
+hr{border:0;border-top:1px solid var(--color-border);margin:0}
+.row{display:flex;justify-content:space-between;font-size:16px}
+.row span:first-child{color:var(--color-secondary-foreground)}
+.row.total{font-weight:600}
+.row.total .mono{font-size:16px}
+.cta{margin-top:auto;width:100%;height:52px;border:0;border-radius:8px;background:var(--color-primary);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.cta:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="screen">
+  <section class="hero">
+    <div class="badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <h1>Tak for din ordre</h1>
+    <p class="lead">Vi har sendt en bekræftelse til din e-mail.</p>
+  </section>
+
+  <section class="card" aria-label="Ordreoplysninger">
+    <div class="order"><span>Ordrenummer</span><span class="mono">NM-48213</span></div>
+    <div class="order"><span>Leveringsmetode</span><span>Pakkeshop, 2-3 hverdage</span></div>
+  </section>
+
+  <section class="card" aria-label="Ordresummary">
+    <div class="row"><span>Keramikkrus</span><span class="mono">349 kr.</span></div>
+    <div class="row"><span>Linnedpose (2 stk.)</span><span class="mono">258 kr.</span></div>
+    <div class="row"><span>Træskål</span><span class="mono">249 kr.</span></div>
+    <div class="row"><span>Pakkeshop</span><span class="mono">39 kr.</span></div>
+    <hr>
+    <div class="row total"><span>Total</span><span class="mono">895 kr.</span></div>
+  </section>
+
+  <button class="cta" type="button">Tilbage til forsiden</button>
+</main>
+</body>
+</html>

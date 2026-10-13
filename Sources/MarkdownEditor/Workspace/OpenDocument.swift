@@ -14,6 +14,9 @@ final class OpenDocument: ObservableObject, Identifiable {
     /// Called after the file changed on disk and was re-read; the document's
     /// view shows the new version.
     var onReload: (() -> Void)?
+    /// Called on every disk check (once a second), for views that also follow
+    /// other files, like a canvas's frames.
+    var onDiskCheck: (() -> Void)?
 
     private var saveTask: Task<Void, Never>?
     private var saveFailurePresented = false
@@ -36,6 +39,7 @@ final class OpenDocument: ObservableObject, Identifiable {
 
     var isDirty: Bool { text != lastSavedText }
     var isHTML: Bool { url.map(FolderScanner.isHTML) ?? false }
+    var isCanvas: Bool { url.map(FolderScanner.isCanvas) ?? false }
     var displayName: String { url?.lastPathComponent ?? "Untitled" }
 
     /// "path:12-14" followed by the passage as a quote, for pasting to an agent.
@@ -122,6 +126,7 @@ final class OpenDocument: ObservableObject, Identifiable {
     /// Picks up changes made to the file outside the app. Clean documents
     /// reload silently; with unsaved edits the user decides.
     func syncWithDisk() {
+        onDiskCheck?()
         guard let url, !conflictPresented,
               let onDisk = Self.modificationDate(url), onDisk != diskDate else { return }
         if isDirty {
@@ -219,7 +224,7 @@ final class OpenDocument: ObservableObject, Identifiable {
         }
     }
 
-    private static func modificationDate(_ url: URL) -> Date? {
+    static func modificationDate(_ url: URL) -> Date? {
         let path = url.resolvingSymlinksInPath().path
         return (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
     }

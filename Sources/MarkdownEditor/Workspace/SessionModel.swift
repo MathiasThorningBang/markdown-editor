@@ -250,7 +250,7 @@ final class SessionModel: ObservableObject {
     private func updateWindowChrome() {
         stats = ""
         statsSubscription = activeDoc.flatMap { doc in
-            doc.isHTML ? nil : doc.$text.sink { [weak self] text in
+            doc.isHTML || doc.isCanvas ? nil : doc.$text.sink { [weak self] text in
                 let stats = OpenDocument.stats(for: text)
                 if self?.stats != stats { self?.stats = stats }
             }

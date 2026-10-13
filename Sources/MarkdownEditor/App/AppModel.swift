@@ -67,7 +67,7 @@ final class AppModel: ObservableObject {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = true
-        panel.allowedContentTypes = [.markdown, .html]
+        panel.allowedContentTypes = [.markdown, .html, .jsonCanvas]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         open(url)
     }

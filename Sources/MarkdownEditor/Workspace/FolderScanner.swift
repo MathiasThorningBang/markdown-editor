@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 extension UTType {
     static let markdown = UTType(importedAs: "net.daringfireball.markdown")
+    static let jsonCanvas = UTType(importedAs: "org.jsoncanvas.canvas")
 }
 
 struct FileEntry: Identifiable, Hashable {
@@ -16,9 +17,15 @@ enum FolderScanner {
     static let markdownExtensions: Set<String> = ["md", "markdown", "mdown"]
     /// Shown read-only (HTMLViewerController).
     static let htmlExtensions: Set<String> = ["html", "htm"]
+    /// JSON Canvas files (jsoncanvas.org), shown on a pan/zoom canvas (CanvasController).
+    static let canvasExtensions: Set<String> = ["canvas"]
 
     static func isHTML(_ url: URL) -> Bool {
         htmlExtensions.contains(url.pathExtension.lowercased())
+    }
+
+    static func isCanvas(_ url: URL) -> Bool {
+        canvasExtensions.contains(url.pathExtension.lowercased())
     }
 
     static func scan(_ folder: URL) -> [FileEntry] {
@@ -28,6 +35,7 @@ enum FolderScanner {
             .filter {
                 let ext = $0.pathExtension.lowercased()
                 return markdownExtensions.contains(ext) || htmlExtensions.contains(ext)
+                    || canvasExtensions.contains(ext)
             }
             .map(FileEntry.init)
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }

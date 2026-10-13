@@ -40,7 +40,7 @@ struct SidebarView: View {
                         }
                     }
                 } header: {
-                    SidebarHeader(title: project.name, count: project.files.count)
+                    SidebarHeader(title: project.name, count: project.files.count, folder: project.folderURL)
                     .contextMenu {
                         Button("Copy Path") {
                             AppModel.shared.copyPath(project.folderURL)
@@ -63,15 +63,26 @@ struct SidebarView: View {
 }
 
 /// Section header at 12px (the system sidebar default is 11pt, below the NM minimum).
+/// Projects show where their folder lives on a second, gray line.
 private struct SidebarHeader: View {
     let title: String
     let count: Int
+    var folder: URL? = nil
 
     var body: some View {
         HStack {
-            Text(title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(NMColors.secondaryForeground)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(NMColors.secondaryForeground)
+                if let folder {
+                    Text(Self.parentLabel(folder))
+                        .font(.system(size: 12))
+                        .foregroundStyle(NMColors.mutedForeground)
+                }
+            }
+            .lineLimit(1)
+            .help(folder?.path ?? "")
             Spacer()
             Text("\(count)")
                 .font(.system(size: 12))
@@ -80,10 +91,27 @@ private struct SidebarHeader: View {
         }
         .contentShape(Rectangle())
     }
+
+    /// The folder's parent with ~ for home, cut at whole folders:
+    /// "~/Desktop/work" in full, deeper ones as their two nearest folders ("…/Intern/Prod").
+    static func parentLabel(_ folder: URL) -> String {
+        var parts = folder.deletingLastPathComponent().pathComponents
+        let home = FileManager.default.homeDirectoryForCurrentUser.pathComponents
+        if parts.starts(with: home) {
+            parts = ["~"] + parts.dropFirst(home.count)
+        } else {
+            parts[0] = ""  // the leading "/" component; joining puts the slash back
+        }
+        let label = parts.count > 3
+            ? "…/" + parts.suffix(2).joined(separator: "/")
+            : parts.joined(separator: "/")
+        return label.isEmpty ? "/" : label
+    }
 }
 
+/// File name without its extension, after a tag in the file type's color.
 private struct SidebarRow: View {
-    @ObservedObject private var theme = ThemeSettings.shared
+    @Environment(\.colorScheme) private var colorScheme
     let name: String
     let url: URL?
     let document: OpenDocument?
@@ -93,14 +121,15 @@ private struct SidebarRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(name)
+                FileTypeTag(ext: ext)
+                Text(baseName)
                     .font(.system(size: 13, weight: isActive ? .medium : .regular))
                     .foregroundStyle(NMColors.foreground)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 4)
                 if let document {
-                    OpenDot(document: document)
+                    OpenDot(document: document, color: NMColors.fileType(ext))
                 }
             }
             .contentShape(Rectangle())
@@ -115,21 +144,43 @@ private struct SidebarRow: View {
         .padding(.horizontal, 6)
         .background(
             RoundedRectangle(cornerRadius: 5)
-                .fill(isActive ? theme.accent.opacity(0.14) : .clear)
+                // Neutral gray, not the accent: the colored tags need the contrast.
+                .fill(isActive ? NMColors.foreground.opacity(colorScheme == .dark ? 0.11 : 0.09) : .clear)
         )
         .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
         .listRowSeparator(.hidden)
     }
+
+    /// Drafts have no URL and are markdown.
+    private var ext: String { url?.pathExtension.lowercased() ?? "md" }
+
+    private var baseName: String {
+        url.map { $0.deletingPathExtension().lastPathComponent } ?? name
+    }
 }
 
-/// Dot = file is open; accent color while it has unsaved changes (autosave pending).
+private struct FileTypeTag: View {
+    let ext: String
+
+    var body: some View {
+        let color = NMColors.fileType(ext)
+        Text(ext.uppercased())
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(color)
+            .frame(width: 58, height: 18)
+            .background(RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.14)))
+    }
+}
+
+/// Dot = file is open, in the file type's color. Unsaved changes only last until
+/// autosave (700 ms), so they get no color of their own.
 private struct OpenDot: View {
     @ObservedObject var document: OpenDocument
-    @ObservedObject private var theme = ThemeSettings.shared
+    let color: Color
 
     var body: some View {
         Circle()
-            .fill(document.isDirty ? theme.accent : NMColors.mutedForeground)
+            .fill(color)
             .frame(width: 6, height: 6)
             .accessibilityLabel(document.isDirty ? "Unsaved" : "Open")
     }

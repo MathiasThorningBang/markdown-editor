@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Log ind</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--color-background);color:var(--color-foreground);font-family:var(--font-body)}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.layout{width:100%;max-width:1040px;display:grid;gap:32px;justify-items:center}
+.pitch{display:none}
+.card{width:100%;max-width:400px;background:var(--color-card);border:1px solid var(--color-border);border-radius:12px;padding:24px}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;margin-bottom:24px}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--color-primary)}
+h1{font-size:24px;line-height:1.25;margin:0 0 8px}
+.lead{margin:0 0 24px;font-size:16px;color:var(--color-muted-foreground)}
+label{display:block;font-size:16px;font-weight:500;margin-bottom:6px}
+input{display:block;width:100%;height:48px;padding:0 14px;margin-bottom:16px;font:inherit;font-size:16px;color:var(--color-foreground);background:var(--color-background);border:1px solid var(--color-border);border-radius:8px}
+input:focus{outline:2px solid var(--color-primary);outline-offset:1px}
+.row{display:flex;justify-content:space-between;align-items:center;margin:-4px 0 16px}
+.check{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--color-secondary-foreground)}
+button{width:100%;height:48px;border:0;border-radius:8px;background:var(--color-primary);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.forgot{display:block;margin-top:16px;text-align:center;font-size:16px;color:var(--color-nm-blue);text-decoration:none}
+.forgot:hover{text-decoration:underline}
+.pitch h2{font-size:32px;line-height:1.2;margin:0 0 16px}
+.pitch p{margin:0 0 24px;font-size:18px;line-height:1.5;color:var(--color-muted-foreground)}
+.pitch .stat{display:inline-block;padding:12px 16px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-card);font-family:var(--font-mono);font-size:16px}
+@media (min-width:834px){
+  .layout{grid-template-columns:1fr 400px;justify-items:stretch;align-items:center}
+  .pitch{display:block;padding:32px}
+  .card{max-width:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="layout">
+    <section class="pitch" aria-label="Om platformen">
+      <h2>Alt dit arbejde samlet ét sted</h2>
+      <p>Projekter, filer og godkendelser i ét overblik. Log ind for at se dine opgaver og teams.</p>
+      <span class="stat">124 aktive projekter</span>
+    </section>
+
+    <form class="card" action="#" onsubmit="return false">
+      <div class="brand"><span class="mark" aria-hidden="true"></span>Nørgård Mikkelsen</div>
+      <h1>Log ind</h1>
+      <p class="lead">Velkommen tilbage. Indtast dine oplysninger for at fortsætte.</p>
+
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="email" placeholder="navn@firma.dk">
+
+      <label for="password">Adgangskode</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Din adgangskode">
+
+      <label class="check"><input type="checkbox" style="width:auto;height:auto;margin:0">Husk mig på denne enhed</label>
+      <div style="height:16px"></div>
+
+      <button type="submit">Log ind</button>
+      <a class="forgot" href="#">Glemt adgangskode?</a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

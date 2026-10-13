@@ -1,0 +1,212 @@
+{
+	"nodes": [
+		{
+			"id": "g-headers",
+			"type": "group",
+			"label": "Sidebar: stier i projekt-headeren",
+			"x": 1320,
+			"y": -1200,
+			"width": 1320,
+			"height": 980
+		},
+		{
+			"id": "sidebar-note",
+			"type": "text",
+			"x": -520,
+			"y": -1160,
+			"width": 440,
+			"height": 560,
+			"text": "# Sidebar: filtyper som tags\n\nFilnavne uden endelse, og typen som et farvet tag, så man kan se forskel på `.md`, `.html` og `.canvas` med det samme.\n\n- **current**: sådan er den i dag.\n- **pill**: tag til højre for navnet.\n- **left**: tag med fast bredde foran navnet, så navnene står på linje.\n- **quiet**: som pill, men `.md` får intet tag. Det er langt de fleste filer, så kun de afvigende typer skiller sig ud.\n\nFarver: md = NM-blå, html = orange, canvas = lilla. Rød er reserveret til valgt fil og ugemte ændringer."
+		},
+		{
+			"id": "g-sidebar",
+			"type": "group",
+			"label": "Sidebar: filtyper som tags",
+			"x": -40,
+			"y": -1200,
+			"width": 1240,
+			"height": 980
+		},
+		{
+			"id": "sidebar-current",
+			"type": "file",
+			"file": "screens/sidebar-current.html",
+			"x": 0,
+			"y": -1160,
+			"width": 249,
+			"height": 901
+		},
+		{
+			"id": "sidebar-pill",
+			"type": "file",
+			"file": "screens/sidebar-pill.html",
+			"x": 310,
+			"y": -1160,
+			"width": 245,
+			"height": 900
+		},
+		{
+			"id": "sidebar-left",
+			"type": "file",
+			"file": "screens/sidebar-left.html",
+			"x": 620,
+			"y": -1160,
+			"width": 276,
+			"height": 900
+		},
+		{
+			"id": "sidebar-quiet",
+			"type": "file",
+			"file": "screens/sidebar-quiet.html",
+			"x": 930,
+			"y": -1160,
+			"width": 259,
+			"height": 900
+		},
+		{
+			"id": "note",
+			"type": "text",
+			"x": -520,
+			"y": 0,
+			"width": 440,
+			"height": 420,
+			"text": "# MarkdownEditor\n\nHele appen som HTML, så vi kan diskutere og prøve ændringer her, før de bygges i Swift og web.\n\n**Vinduet** (sidebar og toolbar) ligger ét sted: `screens/chrome.js` og `screens/app.css`. Hver skærm beskriver kun sin tilstand og sit indhold.\n\nSkærmene følger lyst/mørkt tema, accentfarve og skrifttyper fra Settings, ligesom appen.\n\nRetter du i `app.css` eller `chrome.js`, så `touch screens/*.html`. Canvasset genindlæser kun frames, hvis egen fil ændres."
+		},
+		{
+			"id": "sources",
+			"type": "text",
+			"x": -520,
+			"y": 480,
+			"width": 440,
+			"height": 320,
+			"text": "## Kilder\n\n- Vindue og toolbar: `UI/MainWindowView.swift`\n- Sidebar: `UI/SidebarView.swift`\n- Settings: `UI/SettingsView.swift`\n- Farver: `Web/editor.html` + `UI/NMColors.swift`\n- Markdown: `Web/editor.html` (Crepe)\n- Canvas: `Web/canvas.html`"
+		},
+		{
+			"id": "g-documents",
+			"type": "group",
+			"label": "Filtyper: .md, .html og .canvas",
+			"x": -40,
+			"y": -40,
+			"width": 4560,
+			"height": 980
+		},
+		{
+			"id": "doc-md",
+			"type": "file",
+			"file": "screens/doc-md.html",
+			"x": 0,
+			"y": 0,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "doc-html",
+			"type": "file",
+			"file": "screens/doc-html.html",
+			"x": 1520,
+			"y": 0,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "doc-canvas",
+			"type": "file",
+			"file": "screens/doc-canvas.html",
+			"x": 3040,
+			"y": 0,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "g-states",
+			"type": "group",
+			"label": "Indstillinger og tomme tilstande",
+			"x": -40,
+			"y": 1100,
+			"width": 4560,
+			"height": 980
+		},
+		{
+			"id": "settings",
+			"type": "file",
+			"file": "screens/settings.html",
+			"x": 0,
+			"y": 1140,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "no-selection",
+			"type": "file",
+			"file": "screens/no-selection.html",
+			"x": 1520,
+			"y": 1140,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "empty",
+			"type": "file",
+			"file": "screens/empty.html",
+			"x": 3040,
+			"y": 1140,
+			"width": 1440,
+			"height": 900
+		},
+		{
+			"id": "header-name",
+			"type": "file",
+			"file": "screens/header-name.html",
+			"x": 1360,
+			"y": -1160,
+			"width": 250,
+			"height": 900
+		},
+		{
+			"id": "header-tail",
+			"type": "file",
+			"file": "screens/header-tail.html",
+			"x": 1690,
+			"y": -1160,
+			"width": 250,
+			"height": 900
+		},
+		{
+			"id": "header-twoline",
+			"type": "file",
+			"file": "screens/header-twoline.html",
+			"x": 2020,
+			"y": -1160,
+			"width": 250,
+			"height": 900
+		},
+		{
+			"id": "header-smart",
+			"type": "file",
+			"file": "screens/header-smart.html",
+			"x": 2350,
+			"y": -1160,
+			"width": 250,
+			"height": 900
+		},
+		{
+			"id": "headers-note",
+			"type": "text",
+			"x": 2680,
+			"y": -1120,
+			"width": 440,
+			"height": 520,
+			"text": "# Sidebar: stier i projekt-headeren\n\nI dag viser headeren kun mappenavnet. Det rækker ikke, når to projekter hedder det samme, fx de to `docs`.\n\n- **name**: i dag.\n- **tail**: de sidste tre mapper som overskrift (`…/Intern/Prod/MCP`).\n- **twoline**: mappenavnet som nu, og de to nærmeste overmapper i gråt under.\n- **smart**: kun mappenavnet, medmindre to projekter hedder det samme. Så kommer overmappen på, fx `docs nsk-ordreagent`.\n\nDen fulde sti står altid i tooltip ved hover."
+		}
+	],
+	"edges": [
+		{
+			"id": "e-settings",
+			"fromNode": "doc-md",
+			"fromSide": "bottom",
+			"toNode": "settings",
+			"toSide": "top",
+			"label": "⌘, eller tandhjulet"
+		}
+	]
+}

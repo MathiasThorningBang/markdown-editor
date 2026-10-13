@@ -12,6 +12,16 @@ enum NMColors {
     static let card = Color(light: 0xFFFFFF, dark: 0x212121)
     /// Solid dark sidebar (Codex style); light mode keeps the system material.
     static let darkSidebar = Color(hex: 0x212121)
+
+    /// Sidebar file-type tags (and their unsaved dot); same values as
+    /// `--type-*` in design/screens/app.css. md is NM blue.
+    static func fileType(_ ext: String) -> Color {
+        switch ext {
+        case "html", "htm": Color(light: 0xC4621C, dark: 0xE8914F)
+        case "canvas": Color(light: 0x6F52CC, dark: 0xA08AE8)
+        default: Color(light: 0x2E7AB5, dark: 0x5B9BD5)
+        }
+    }
 }
 
 enum AppearanceMode: String, CaseIterable, Identifiable {

@@ -98,13 +98,16 @@ enum PreviewRuntime {
     private static let chart = (try? String(contentsOf: webDir.appendingPathComponent("vendor/chart.umd.min.js"), encoding: .utf8)) ?? ""
     private static let runtime = (try? String(contentsOf: webDir.appendingPathComponent("preview-runtime.js"), encoding: .utf8)) ?? ""
 
-    static func script(fragment: Bool) -> String {
+    /// `canvas`: the canvas page itself keeps its pan/zoom on a dark-mode switch;
+    /// only its frames reload.
+    static func script(fragment: Bool, canvas: Bool = false) -> String {
         let vars = ThemeSettings.shared.cssVariables
         let theme: [String: Any] = [
             "primary": vars["--color-primary"] ?? "",
             "fontBody": vars["--font-body"] ?? "",
             "fontMono": vars["--font-mono"] ?? "",
             "fragment": fragment,
+            "canvas": canvas,
         ]
         let json = String(data: try! JSONSerialization.data(withJSONObject: theme), encoding: .utf8)!
         return "window.__mdTheme = \(json);\n\(chart)\n\(runtime)"
@@ -119,7 +122,8 @@ enum PreviewRuntime {
             controller.add(networkRules)
             return done(true)
         }
-        let rules = #"[{"trigger":{"url-filter":"^(https?|wss?)://"},"action":{"type":"block"}}]"#
+        // One rule per scheme: content blockers don't support | in url-filter.
+        let rules = #"[{"trigger":{"url-filter":"^https?://"},"action":{"type":"block"}},{"trigger":{"url-filter":"^wss?://"},"action":{"type":"block"}}]"#
         WKContentRuleListStore.default().compileContentRuleList(
             forIdentifier: "md-offline", encodedContentRuleList: rules
         ) { list, _ in
