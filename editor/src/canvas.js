@@ -212,7 +212,7 @@ function createNode(node) {
       body.append(img)
     } else if (/\.md$/i.test(abs)) {
       el.classList.add('card', 'has-label')
-      body.append(markdown(files[abs]?.text ?? '', dirname(abs)))
+      body.append(markdown(files[abs]?.text ?? '', dirname(abs), abs))
       el.append(label(basename(abs)))
     } else {
       el.classList.add('card', 'has-label')
@@ -264,10 +264,18 @@ function label(textContent, withSize = false) {
 }
 
 // The canvas page can message Swift, so note HTML is always sanitized.
-function markdown(source, base) {
+// Task boxes on a .md card can be ticked: Swift writes the change to `file`.
+function markdown(source, base, file = null) {
   const el = document.createElement('div')
   el.className = 'markdown'
   el.innerHTML = DOMPurify.sanitize(marked.parse(source))
+  if (file) {
+    el.dataset.file = file
+    el.querySelectorAll('input[type="checkbox"]').forEach((box, index) => {
+      box.disabled = false
+      box.dataset.task = index
+    })
+  }
   for (const img of el.querySelectorAll('img[src]')) {
     const src = img.getAttribute('src')
     if (!/^[a-z]+:/i.test(src)) img.src = fileURL(resolve(decodeURI(src), base))
@@ -600,7 +608,7 @@ viewport.addEventListener('pointerdown', (e) => {
   }
   // Frames move by their label; clicking a resting frame only brings it to life.
   // Cards move by any part that isn't a link.
-  if (e.target.closest('.shield, a')) return
+  if (e.target.closest('.shield, a, .markdown input')) return
   if (e.target.closest('.label') || !el.classList.contains('frame')) {
     // The whole selection moves, groups with what's inside them.
     const moving = new Set()
@@ -728,6 +736,14 @@ viewport.addEventListener('click', (e) => {
   else if (!/^[a-z]+:/i.test(href) && !href.startsWith('#')) {
     post('openFile', resolve(decodeURI(href.split('#')[0]), a.dataset.base))
   }
+})
+
+// The nth task box in a .md card is the nth task item in the file.
+viewport.addEventListener('change', (e) => {
+  const box = e.target.closest('.markdown input[data-task]')
+  if (!box) return
+  const file = box.closest('.markdown').dataset.file
+  post('toggleTask', { path: file, index: Number(box.dataset.task), checked: box.checked })
 })
 
 addEventListener('resize', () => view && applyView())
