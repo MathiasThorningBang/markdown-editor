@@ -67,7 +67,7 @@ Det viser appen:
 | Node | Vises som |
 |---|---|
 | `file` med `.html`/`.htm` | Levende frame i nodens størrelse. Siden scroller indeni. Navnet og bredden står over den |
-| `file` med `.md` | Kort med renderet markdown |
+| `file` med `.md` | Kort med renderet markdown. Tjeklister (`- [ ]`) vises uden prik, og et klik på feltet gemmer krydset i filen |
 | `file` med billede (png, jpg, gif, webp, svg, avif) | Billedet, skaleret til at passe |
 | `text` | Kort med renderet markdown fra `text` |
 | `link` | Kort med domæne og URL. Dobbeltklik åbner browseren (frames har ikke netværk) |

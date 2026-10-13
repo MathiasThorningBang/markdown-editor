@@ -27,7 +27,7 @@ final class CanvasController: NSObject, DocumentViewController, WKNavigationDele
         // Handlers before WKWebView(configuration:): the web view copies its configuration.
         let config = WKWebViewConfiguration()
         config.setURLSchemeHandler(LocalFileSchemeHandler(), forURLScheme: "mdfile")
-        for name in ["canvasReady", "contentChanged", "openFile", "openLink"] {
+        for name in ["canvasReady", "contentChanged", "openFile", "openLink", "toggleTask"] {
             config.userContentController.add(messageProxy, name: name)
         }
         webView = EditorWebView(frame: .zero, configuration: config)
@@ -169,9 +169,60 @@ final class CanvasController: NSObject, DocumentViewController, WKNavigationDele
             guard let raw = message.body as? String, let url = URL(string: raw),
                   ["http", "https", "mailto"].contains(url.scheme ?? "") else { return }
             NSWorkspace.shared.open(url)
+        case "toggleTask":
+            guard let body = message.body as? [String: Any], let path = body["path"] as? String,
+                  let index = body["index"] as? Int, let checked = body["checked"] as? Bool else { return }
+            toggleTask(in: path, index: index, checked: checked)
         default:
             break
         }
+    }
+
+    /// Ticks the index-th task item of a .md card's file. Only files the canvas
+    /// points at; the card reloads from disk on the next check.
+    private func toggleTask(in path: String, index: Int, checked: Bool) {
+        guard path.lowercased().hasSuffix(".md"), referencedFiles().contains(path),
+              let text = try? String(contentsOfFile: path, encoding: .utf8),
+              let updated = Self.settingTask(index, checked: checked, in: text) else {
+            reloadChangedFiles()
+            return
+        }
+        do {
+            try updated.write(toFile: path, atomically: true, encoding: .utf8)
+        } catch {
+            AppModel.shared.session.showToast("Couldn't save \((path as NSString).lastPathComponent)")
+        }
+        reloadChangedFiles()
+    }
+
+    /// `text` with the index-th task box (`- [ ]`, `* [x]`, `1. [ ]`, also in
+    /// quotes) set, counting like marked: boxes in fenced code don't count.
+    static func settingTask(_ index: Int, checked: Bool, in text: String) -> String? {
+        let task = try! NSRegularExpression(pattern: #"^((?:>\s?)*\s*(?:[-*+]|\d+[.)])\s+)\[[ xX]\](?=\s|$)"#)
+        var lines = text.components(separatedBy: "\n")
+        var fence: String?
+        var count = 0
+        for (i, line) in lines.enumerated() {
+            let trimmed = line.drop { $0 == " " }
+            if let marker = fence {
+                if trimmed.hasPrefix(marker) { fence = nil }
+                continue
+            }
+            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
+                fence = String(trimmed.prefix(3))
+                continue
+            }
+            let range = NSRange(line.startIndex..., in: line)
+            guard let match = task.firstMatch(in: line, range: range) else { continue }
+            if count == index {
+                let prefix = (line as NSString).substring(with: match.range(at: 1))
+                let rest = (line as NSString).substring(from: match.range.upperBound)
+                lines[i] = prefix + (checked ? "[x]" : "[ ]") + rest
+                return lines.joined(separator: "\n")
+            }
+            count += 1
+        }
+        return nil
     }
 
     /// Documents the app shows open in a tab; anything else (images) in its own app.

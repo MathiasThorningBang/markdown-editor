@@ -110,6 +110,9 @@
     .markdown h3 { font-size: 17px; }
     .markdown p, .markdown ul, .markdown ol { margin: 0.5em 0; }
     .markdown ul, .markdown ol { padding-left: 1.3em; }
+    .markdown li:has(input[type="checkbox"]) { list-style: none; margin-left: -1.3em; }
+    .markdown li input[type="checkbox"] { margin: 0 0.45em 0 0; accent-color: var(--color-primary); }
+    .markdown li input[type="checkbox"]:enabled { cursor: pointer; }
     .markdown a { color: var(--color-primary); }
     .markdown code { font-family: var(--font-mono); font-size: 14px; background: var(--color-muted); border-radius: 4px; padding: 1px 4px; }
     .markdown img { max-width: 100%; }
