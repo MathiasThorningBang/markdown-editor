@@ -53,12 +53,13 @@ function header(p) {
 }
 const SCREENS = { md: 'doc-md.html', html: 'doc-html.html', canvas: 'doc-canvas.html' }
 
-// Stand-ins for the SF Symbols in MainWindowView: moon/sun.max, gearshape, doc.on.clipboard
+// Stand-ins for the SF Symbols in MainWindowView: moon/sun.max, gearshape, speaker.wave.2, doc.on.clipboard
 const ICONS = {
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   sidebar: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M5.5 8h1.5M5.5 11h1.5"/>',
+  speaker: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
   clipboard: '<rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/>',
 }
 const icon = (name) => `<svg viewBox="0 0 24 24">${ICONS[name]}</svg>`
@@ -115,6 +116,7 @@ const toolbar = `
     <div class="tools">
       <a title="${dark ? 'Switch to light mode' : 'Switch to dark mode'}">${icon(dark ? 'sun' : 'moon')}</a>
       <a class="${settings ? 'on' : ''}" href="${settings ? 'doc-md.html' : 'settings.html'}" title="Settings (⌘,)">${icon('gear')}</a>
+      ${active.endsWith('.md') ? `<a title="Read the file aloud">${icon('speaker')}</a>` : ''}
       ${active ? `<a title="Copy the file's path to the clipboard">${icon('clipboard')}</a>` : ''}
     </div>
   </header>`

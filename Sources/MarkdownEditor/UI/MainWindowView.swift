@@ -6,6 +6,7 @@ import SwiftUI
 struct MainWindowView: View {
     @ObservedObject var session = AppModel.shared.session
     @ObservedObject var theme = ThemeSettings.shared
+    @ObservedObject var reader = ReadAloud.shared
     @Environment(\.openWindow) private var openWindow
     @Environment(\.colorScheme) private var colorScheme
 
@@ -53,6 +54,51 @@ struct MainWindowView: View {
                         }
                         .help("Settings (⌘,)")
                     }
+                    if let doc = session.activeDoc, !doc.isHTML, !doc.isCanvas {
+                        ToolbarItem {
+                            Button {
+                                switch reader.state {
+                                case .idle:
+                                    // Highlight in this document's editor, even if another becomes active.
+                                    let id = doc.id
+                                    reader.onSentence = { [weak session] sentence in
+                                        session?.editorPool.controllers[id]?.webView.evaluateJavaScript(
+                                            "window.readAloudHighlight(\(sentence.map(jsonString) ?? "null"))"
+                                        )
+                                    }
+                                    // Read from the sentence the cursor is in; the editor finds it.
+                                    let text = doc.text
+                                    let sentences = ReadAloud.sentences(of: text).map { jsonString($0.text) }.joined(separator: ",")
+                                    guard let webView = session.editorPool.controllers[id]?.webView else {
+                                        reader.start(text)
+                                        return
+                                    }
+                                    webView.evaluateJavaScript("window.readAloudStart([\(sentences)])") { first, _ in
+                                        reader.start(text, from: (first as? Int) ?? 0)
+                                    }
+                                case .speaking: reader.pause()
+                                case .paused: reader.resume()
+                                }
+                            } label: {
+                                switch reader.state {
+                                case .idle: Label("Read Aloud", systemImage: "speaker.wave.2")
+                                case .speaking: Label("Pause", systemImage: "pause")
+                                case .paused: Label("Resume", systemImage: "play")
+                                }
+                            }
+                            .help(readAloudHelp(doc.text))
+                        }
+                    }
+                    if reader.state != .idle {
+                        ToolbarItem {
+                            Button {
+                                reader.stop()
+                            } label: {
+                                Label("Stop Reading", systemImage: "stop")
+                            }
+                            .help("Stop reading aloud")
+                        }
+                    }
                     if let url = session.activeDoc?.url {
                         ToolbarItem {
                             Button {
@@ -97,6 +143,7 @@ struct MainWindowView: View {
         }
         .onAppear {
             AppModel.shared.showWindow = { openWindow(id: "main") }
+            reader.onError = { session.showToast($0) }
             session.refreshFiles()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
@@ -105,6 +152,19 @@ struct MainWindowView: View {
                 session.refreshFiles()
             }
         }
+    }
+
+    private func readAloudHelp(_ text: String) -> String {
+        guard reader.state == .idle else { return reader.state == .speaking ? "Pause reading" : "Resume reading" }
+        let language = ReadAloud.language(of: text)
+        let name = reader.voiceName(for: language)
+        #if Kokoro
+        if reader.kokoroVoice(for: language) == nil && reader.plapreVoice(for: language) == nil {
+            let voices = language == "da" ? "Danish" : "English"
+            return "Read aloud from the cursor with \(name). For a more natural voice, download the \(voices) voices in Settings."
+        }
+        #endif
+        return "Read aloud from the cursor with \(name)"
     }
 
     private var emptyState: some View {
