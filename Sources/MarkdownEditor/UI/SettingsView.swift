@@ -335,6 +335,7 @@ private struct ModelStatus: View {
             Text("Installed")
                 .font(.system(size: 13))
                 .foregroundStyle(NMColors.secondaryForeground)
+                .help(help)
         } else if let progress = download.progress {
             HStack(spacing: 10) {
                 ProgressView(value: progress)
