@@ -68,7 +68,7 @@ brew install espeak-ng llama.cpp
 KOKORO=1 ./build.sh
 ```
 
-Then download the voices in Settings → Read aloud. The default `./build.sh` leaves all of this out. Licenses: Kokoro is Apache-2.0, Plapre Turbo (syv.ai) MIT, and espeak-ng, which the optional build bundles, GPL-3.0.
+Then download the voices in Settings → Read aloud. The default `./build.sh` leaves all of this out. Licenses: Kokoro is Apache-2.0 and Plapre Turbo (syv.ai) MIT. Its Kanade decoder and HiFT vocoder come as ONNX from [elgehelge](https://huggingface.co/elgehelge/plapre-onnx-web) under CC BY 4.0, and Mic and Nic are voices from the CoRal TTS dataset (CC0). espeak-ng, which the optional build bundles, is GPL-3.0.
 
 ## Updating
 

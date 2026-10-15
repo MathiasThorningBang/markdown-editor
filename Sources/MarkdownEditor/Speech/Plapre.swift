@@ -8,7 +8,8 @@ import os
 /// Plapre Turbo (syv.ai, MIT) Danish voices, run locally: a Llama reads the text
 /// and its espeak phonemes and predicts Kanade audio tokens (llama.cpp, on the GPU),
 /// which the Kanade decoder (MIT) and the HiFT vocoder (Apache-2.0) turn into 24 kHz
-/// audio (ONNX export by elgehelge/plapre-onnx-web). The voices are CoRal's Mic and Nic.
+/// audio (ONNX export by elgehelge/plapre-onnx-web, CC BY 4.0: keep the credit in Settings).
+/// The voices are Mic and Nic from the CoRal TTS dataset (CC0).
 enum Plapre {
     /// Built-in speaker → display name, in menu order.
     static let voices = [("mic", "Mic"), ("nic", "Nic")]

@@ -74,7 +74,7 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
   editor (`window.readAloudHighlight` in `editor.html`, overlay divs, so the
   document is never touched). The voice follows the document's language: English reads
   with Kokoro-82M (Daniel by default, or George), Danish with Plapre Turbo (Mic or Nic,
-  syv.ai, MIT: keep the credit in Settings), each when built in and downloaded from
+  syv.ai, MIT; elgehelge's ONNX export, CC BY 4.0: keep both credits in Settings), each when built in and downloaded from
   Settings to Application Support (326 MB and 790 MB, pinned Hugging Face revisions).
   Otherwise the system's Daniel or Sara. Apps can't use the Siri voices:
   `AVSpeechSynthesisVoice.speechVoices()` hides them outside Apple's own binaries.

@@ -113,7 +113,7 @@ struct SettingsView: View {
                     }
                     Divider()
                     SettingsRow("Danish voices") {
-                        ModelStatus(download: plapre, size: "790 MB", help: "Plapre Turbo by syv.ai (MIT): Mic and Nic, Danish voices that run on this Mac")
+                        ModelStatus(download: plapre, size: "790 MB", help: "Plapre Turbo by syv.ai (MIT) with Kanade and HiFT exported to ONNX by elgehelge (CC BY 4.0): Mic and Nic, Danish voices from CoRal (CC0) that run on this Mac")
                     }
                     Divider()
                     #endif
