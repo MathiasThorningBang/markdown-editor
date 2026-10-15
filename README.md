@@ -1,6 +1,6 @@
 # MarkdownEditor
 
-WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type and reload when an agent changes them on disk, and Cmd+click opens links — including local file paths. Everything runs locally, no network.
+WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type and reload when an agent changes them on disk, and Cmd+click opens links — including local file paths. Everything runs locally, with no network apart from an optional voice download.
 
 Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono) by default.
 
@@ -28,6 +28,14 @@ Open settings with the gear in the toolbar or ⌘, — they open as a page in th
 
 Everything stays offline: previews, HTML files and canvas frames can't reach the network. See `examples/` for a demo, and `examples/canvas/demo.canvas` for a canvas. The agent skills teach agents the format: `skills/md-editor` for documents, `skills/md-canvas` for canvases.
 
+## Read aloud
+
+The speaker button in the toolbar reads the open `.md` file aloud from the sentence the cursor is in, and highlights each sentence as it's spoken. Pause, resume and stop sit next to it. Markdown is read as text: links and emphasis keep only their words, code blocks are skipped, tables are read cell by cell, and ChatGPT's 【…】 citations are dropped.
+
+The voice follows the document's language. Out of the box it's macOS' own Daniel (English) or Sara (Danish). Settings → Read aloud sets the speed and plays a sample. Apps can't use the Siri voices, so those aren't offered.
+
+Natural-sounding voices that run on your Mac come with an optional build (see [Installation](#natural-voices-optional)): Kokoro's George and Daniel for English, and Plapre Turbo's Mic and Nic for Danish. They're downloaded from Hugging Face in Settings (326 MB and 790 MB), the only time the app goes online.
+
 ## Why a markdown editor in 2026?
 
 Because more and more of my work ends up in markdown, and that's no accident.
@@ -50,6 +58,17 @@ mkdir -p ~/.claude/skills && cp -R skills/md-editor skills/md-canvas ~/.claude/s
 ```
 
 This builds the app and installs it to `/Applications/MarkdownEditor.app`. The last line installs the agent skills for Claude Code; other agents load skills from their own folder.
+
+### Natural voices (optional)
+
+The neural read-aloud voices need macOS 27 on Apple silicon and two Homebrew packages, which the build copies into the app:
+
+```sh
+brew install espeak-ng llama.cpp
+KOKORO=1 ./build.sh
+```
+
+Then download the voices in Settings → Read aloud. The default `./build.sh` leaves all of this out. Licenses: Kokoro is Apache-2.0 and Plapre Turbo (syv.ai) MIT. Its Kanade decoder and HiFT vocoder come as ONNX from [elgehelge](https://huggingface.co/elgehelge/plapre-onnx-web) under CC BY 4.0, and Mic and Nic are voices from the CoRal TTS dataset (CC0). espeak-ng, which the optional build bundles, is GPL-3.0.
 
 ## Updating
 

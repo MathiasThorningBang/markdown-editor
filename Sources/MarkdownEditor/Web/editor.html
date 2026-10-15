@@ -246,10 +246,168 @@
     #editor .ProseMirror > .milkdown-code-block:has(.md-preview-slot) {
       max-width: none;
     }
+
+    /* Read aloud: the sentence being spoken, one mark per line (window.readAloudHighlight below) */
+    .read-aloud-mark {
+      position: absolute;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div id="editor"></div>
   <script src="editor.bundle.js"></script>
+  <script>
+    // Read aloud (Speech/ReadAloud.swift) highlights the sentence being spoken.
+    // The spoken text has lost markup, emoji and ChatGPT's 【…】 citations, so
+    // both sides are matched on letters and digits only. The marks are
+    // positioned over the page, outside the editor, so the document itself is
+    // untouched. (CSS Custom Highlights left stale highlights painted.)
+    (() => {
+      const alnum = /[\p{L}\p{N}]/u
+      let cursor = 0
+      let current = null
+      const marks = document.createElement('div')
+      document.body.append(marks)
+
+      // One mark per line (per cell in tables) of the range, measured per text node so inline
+      // elements like <em> don't add overlapping boxes.
+      function draw() {
+        marks.replaceChildren()
+        if (!current) return
+        const lines = []
+        const root = current.commonAncestorContainer
+        const nodes = []
+        if (root.nodeType === Node.TEXT_NODE) nodes.push(root)
+        else {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+          for (let node; (node = walker.nextNode()); ) if (current.intersectsNode(node)) nodes.push(node)
+        }
+        for (const node of nodes) {
+          const part = document.createRange()
+          part.setStart(node, node === current.startContainer ? current.startOffset : 0)
+          part.setEnd(node, node === current.endContainer ? current.endOffset : node.length)
+          for (const r of part.getClientRects()) {
+            if (r.width < 1) continue
+            // Same line and touching: one mark. Table cells side by side stay apart.
+            const line = lines.find((l) => Math.abs(l.top - r.top) < 4 && Math.abs(l.bottom - r.bottom) < 4
+              && r.left <= l.right + 8 && r.right >= l.left - 8)
+            if (line) {
+              line.left = Math.min(line.left, r.left)
+              line.right = Math.max(line.right, r.right)
+            } else {
+              lines.push({ top: r.top, bottom: r.bottom, left: r.left, right: r.right })
+            }
+          }
+        }
+        for (const l of lines) {
+          const mark = document.createElement('div')
+          mark.className = 'read-aloud-mark'
+          mark.style.left = `${l.left + scrollX - 2}px`
+          mark.style.top = `${l.top + scrollY}px`
+          mark.style.width = `${l.right - l.left + 4}px`
+          mark.style.height = `${l.bottom - l.top}px`
+          marks.append(mark)
+        }
+      }
+      addEventListener('resize', draw)
+
+      // Every letter and digit in the editor, with the text node it sits in.
+      function index() {
+        const root = document.querySelector('#editor .ProseMirror')
+        const chars = []
+        const spots = []
+        if (!root) return { text: '', spots }
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+        let inCitation = false
+        for (let node; (node = walker.nextNode()); ) {
+          if (node.parentElement.closest('.milkdown-code-block')) continue
+          for (let i = 0; i < node.data.length; i++) {
+            const c = node.data[i]
+            if (c === '【') inCitation = true
+            else if (c === '】') inCitation = false
+            else if (!inCitation && alnum.test(c)) {
+              chars.push(c.toLowerCase())
+              spots.push([node, i])
+            }
+          }
+        }
+        return { text: chars.join(''), spots }
+      }
+
+      // Where in `text` each sentence is, matched forward like the highlight; -1 if not on the page.
+      function locate(sentences, text) {
+        let from = 0
+        return sentences.map((sentence) => {
+          let key = [...sentence.toLowerCase()].filter((c) => alnum.test(c)).join('')
+          let at = key ? text.indexOf(key, from) : -1
+          if (at < 0 && /^\d/.test(key)) {
+            key = key.replace(/^\d+/, '')
+            at = key ? text.indexOf(key, from) : -1
+          }
+          if (at < 0) return { at: -1, end: -1 }
+          from = at + key.length
+          return { at, end: from }
+        })
+      }
+
+      // The sentence the cursor (or the selection's start) is in or just before, for
+      // reading from there. 0 when the cursor is at the top or after the last sentence.
+      window.readAloudStart = (sentences) => {
+        const { text, spots } = index()
+        const selection = getSelection()
+        const root = document.querySelector('#editor .ProseMirror')
+        if (!selection.rangeCount || !root || !root.contains(selection.anchorNode)) return 0
+        const caret = selection.getRangeAt(0)
+        // First letter or digit at or after the cursor.
+        let char = spots.findIndex(([node, offset]) => caret.comparePoint(node, offset) >= 0)
+        if (char < 0) char = text.length
+        const places = locate(sentences, text)
+        const found = places.findIndex((place) => place.end > char)
+        if (found < 0) return 0
+        cursor = places[found].at
+        return found
+      }
+
+      window.readAloudHighlight = (sentence) => {
+        if (sentence == null) {
+          current = null
+          cursor = 0
+          draw()
+          return
+        }
+        const { text, spots } = index()
+        let key = [...sentence.toLowerCase()].filter((c) => alnum.test(c)).join('')
+        // Reading moves forward, so look after the last sentence first.
+        let at = text.indexOf(key, cursor)
+        if (at < 0) at = text.indexOf(key)
+        // Numbered list items are spoken with their number; the editor draws it as a marker.
+        if (at < 0 && /^\d/.test(key)) {
+          key = key.replace(/^\d+/, '')
+          at = text.indexOf(key, cursor)
+        }
+        if (at < 0 || !key) {
+          // Not on the page (a skipped code block): don't leave the last sentence marked.
+          current = null
+          draw()
+          return
+        }
+        cursor = at + key.length
+        const [startNode, startOffset] = spots[at]
+        const [endNode, endOffset] = spots[at + key.length - 1]
+        const range = new Range()
+        range.setStart(startNode, startOffset)
+        range.setEnd(endNode, endOffset + 1)
+        current = range
+        draw()
+        const rect = range.getBoundingClientRect()
+        if (rect.top < 80 || rect.bottom > innerHeight - 80) {
+          scrollBy({ top: rect.top - innerHeight / 3, behavior: 'smooth' })
+        }
+      }
+    })()
+  </script>
 </body>
 </html>

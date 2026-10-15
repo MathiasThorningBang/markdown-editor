@@ -1,9 +1,15 @@
+import AVFoundation
 import SwiftUI
 
 /// Settings as a page in the editor canvas (⌘, or the gear in the
 /// toolbar). Selecting a file in the sidebar closes it again.
 struct SettingsView: View {
     @ObservedObject var theme = ThemeSettings.shared
+    @ObservedObject var reader = ReadAloud.shared
+    #if Kokoro
+    @ObservedObject var kokoro = ModelDownload.kokoro
+    @ObservedObject var plapre = ModelDownload.plapre
+    #endif
     let close: () -> Void
 
     var body: some View {
@@ -94,6 +100,60 @@ struct SettingsView: View {
                     .foregroundStyle(NMColors.secondaryForeground)
                 }
                 .padding(.top, 20)
+
+                Text("Read aloud")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.top, 32)
+                    .padding(.bottom, 12)
+
+                SettingsCard {
+                    #if Kokoro
+                    SettingsRow("English voices") {
+                        ModelStatus(download: kokoro, size: "326 MB", help: "Kokoro: George and Daniel, natural British voices that run on this Mac")
+                    }
+                    Divider()
+                    SettingsRow("Danish voices") {
+                        ModelStatus(download: plapre, size: "790 MB", help: "Plapre Turbo by syv.ai (MIT) with Kanade and HiFT exported to ONNX by elgehelge (CC BY 4.0): Mic and Nic, Danish voices from CoRal (CC0) that run on this Mac")
+                    }
+                    Divider()
+                    #endif
+                    SettingsRow("English voice") {
+                        VoicePicker(
+                            selection: $reader.voiceID, section: "Kokoro", prefix: "kokoro:", voices: kokoroVoices,
+                            automatic: kokoroVoices.first?.1 ?? ReadAloud.systemVoice(for: "en")?.name
+                        )
+                    }
+                    Divider()
+                    SettingsRow("Danish voice") {
+                        VoicePicker(
+                            selection: $reader.danishVoiceID, section: "Plapre", prefix: "plapre:", voices: plapreVoices,
+                            automatic: plapreVoices.first?.1 ?? ReadAloud.systemVoice(for: "da")?.name
+                        )
+                    }
+                    Divider()
+                    SettingsRow("Speed") {
+                        HStack(spacing: 10) {
+                            Slider(value: $reader.speed, in: 0.6...1.6, step: 0.05)
+                                .frame(width: 180)
+                                .accessibilityLabel("Speed")
+                            Text(String(format: "%.2f×", reader.speed))
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundStyle(NMColors.secondaryForeground)
+                                .frame(width: 44, alignment: .trailing)
+                        }
+                    }
+                    Divider()
+                    SettingsRow("Sample") {
+                        if reader.state == .idle {
+                            HStack(spacing: 8) {
+                                Button("English") { playSample("Good evening. Your research is ready whenever you are.") }
+                                Button("Danish") { playSample("Godaften. Din research er klar, når du er.") }
+                            }
+                        } else {
+                            Button("Stop") { reader.stop() }
+                        }
+                    }
+                }
             }
             .frame(maxWidth: 640)
             .padding(.horizontal, 32)
@@ -102,6 +162,29 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .foregroundStyle(NMColors.foreground)
+    }
+
+    private func playSample(_ text: String) {
+        reader.onSentence = nil
+        reader.start(text)
+    }
+
+    /// Kokoro's voices once built in and downloaded.
+    private var kokoroVoices: [(String, String)] {
+        #if Kokoro
+        kokoro.isInstalled ? Kokoro.voices : []
+        #else
+        []
+        #endif
+    }
+
+    /// Plapre's voices once built in and downloaded.
+    private var plapreVoices: [(String, String)] {
+        #if Kokoro
+        plapre.isInstalled ? Plapre.voices : []
+        #else
+        []
+        #endif
     }
 }
 
@@ -237,6 +320,76 @@ private struct HexChip: View {
         .padding(.vertical, 4)
         .background(Capsule().strokeBorder(NMColors.border, lineWidth: 1))
         .help("Pick your own color")
+    }
+}
+
+#if Kokoro
+/// Download button, progress, or "Installed" for a voice model.
+private struct ModelStatus: View {
+    @ObservedObject var download: ModelDownload
+    let size: String
+    let help: String
+
+    var body: some View {
+        if download.isInstalled {
+            Text("Installed")
+                .font(.system(size: 13))
+                .foregroundStyle(NMColors.secondaryForeground)
+                .help(help)
+        } else if let progress = download.progress {
+            HStack(spacing: 10) {
+                ProgressView(value: progress)
+                    .frame(width: 180)
+                Text("\(Int(progress * 100)) %")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(NMColors.secondaryForeground)
+                    .frame(width: 44, alignment: .trailing)
+            }
+        } else {
+            HStack(spacing: 10) {
+                if let error = download.error {
+                    Text(error)
+                        .font(.system(size: 12))
+                        .foregroundStyle(NMColors.secondaryForeground)
+                        .lineLimit(1)
+                        .help(error)
+                }
+                Button("Download (\(size))") { download.start() }
+                    .help(help)
+            }
+        }
+    }
+}
+
+#endif
+
+/// "Automatic", then a model's voices once downloaded.
+private struct VoicePicker: View {
+    @Binding var selection: String
+    let section: String
+    /// Marks the model in the stored selection, like "kokoro:".
+    let prefix: String
+    /// Voice id and display name; empty until downloaded.
+    let voices: [(String, String)]
+    /// Name of the voice Automatic reads with.
+    let automatic: String?
+
+    var body: some View {
+        Picker("Voice", selection: $selection) {
+            Text("Automatic (\(automatic ?? "system voice"))").tag("")
+            if !voices.isEmpty {
+                Section(section) {
+                    ForEach(voices, id: \.0) { voice, name in
+                        Text(name).tag(prefix + voice)
+                    }
+                }
+            } else if selection.hasPrefix(prefix) {
+                Text("\(section) (not downloaded)").tag(selection)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
     }
 }
 

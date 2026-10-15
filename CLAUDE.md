@@ -55,6 +55,10 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
 * Swift 6 language mode. WebKit delegate methods must copy the SDK's `@MainActor`
   on closure parameters, or they silently stop matching the protocol.
 
+* No SwiftUI macros (`@State`, `@Observable`, `#Preview`): with only the Command Line
+  Tools installed, `swift build` has no SwiftUI macro plugin. State lives in
+  `ObservableObject`s with `@Published`, as the code already does.
+
 * Settings is a page in the editor canvas (`SettingsView`, `session.showSettings`),
   not a separate window.
 
@@ -66,3 +70,36 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
 
 * Changes only to `editor.html` or Swift just need `./build.sh`. Restart the app afterwards.
 
+* Read aloud (`Speech/`) reads one sentence at a time and highlights it in the
+  editor (`window.readAloudHighlight` in `editor.html`, overlay divs, so the
+  document is never touched). The voice follows the document's language: English reads
+  with Kokoro-82M (Daniel by default, or George), Danish with Plapre Turbo (Mic or Nic,
+  syv.ai, MIT; elgehelge's ONNX export, CC BY 4.0: keep both credits in Settings), each when built in and downloaded from
+  Settings to Application Support (326 MB and 790 MB, pinned Hugging Face revisions).
+  Otherwise the system's Daniel or Sara. Apps can't use the Siri voices:
+  `AVSpeechSynthesisVoice.speechVoices()` hides them outside Apple's own binaries.
+
+* `VoicePlayer` trims the silence the models put around each sentence and adds its own
+  pauses (0.2 s between sentences, 0.45 s after a block), and generates until 8 s of
+  audio are queued.
+
+* Plapre (`Speech/Plapre.swift`): Turbo's language model (GGUF q8) runs in llama.cpp on
+  the GPU, fed the text, its Danish espeak phonemes (`Plapre.phonemes`, like phonemizer
+  without stress marks) and Mic's or Nic's vector (`PlapreSpeakers.json`, projected
+  ahead of time with Turbo's speaker_proj.pt). elgehelge's ONNX Kanade decoder and HiFT
+  vocoder make the audio. The GGUF repeats one token's text, which llama.cpp refuses:
+  `patchRepeatedTokens` fixes the file in place. Long sentences go in pieces of about
+  150 characters, each played as soon as it's ready. The model sometimes doesn't stop:
+  `<eos>` is boosted past the expected length, and speech that still runs long is
+  generated once more. Kanade fails above about 500 tokens.
+  Tried and dropped: Plapre Pico on ONNX (CPU only, couldn't keep up with playback),
+  int8 language models (clearly worse voice), and cutting the silent mel frames before
+  HiFT (it changes the whole spectrum). HiFT is the slowest step, and memory pressure
+  (swap) slows everything.
+
+* Kokoro (also building Plapre) is a package trait: `KOKORO=1 ./build.sh` (`swift build --traits Kokoro`),
+  code behind `#if Kokoro`. It needs `brew install espeak-ng llama.cpp`; `build.sh` then copies
+  the libraries (with ggml's Metal and CPU backend plugins and libomp), espeak's English and
+  Danish data into the app and re-signs them, and the app requires macOS 27 (Homebrew's
+  builds do). Homebrew's llama.cpp is newer than the one Plapre Turbo was made with. Prebuilt espeak-ng binaries (pip wheels, sherpa-onnx) can't find their
+  data on macOS 27. The default build has none of this.
