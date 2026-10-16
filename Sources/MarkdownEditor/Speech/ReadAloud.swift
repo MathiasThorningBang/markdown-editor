@@ -216,7 +216,12 @@ final class ReadAloud: NSObject, ObservableObject {
             paragraph = []
         }
         for raw in markdown.components(separatedBy: .newlines) {
-            let line = raw.trimmingCharacters(in: .whitespaces)
+            var line = raw.trimmingCharacters(in: .whitespaces)
+            // A hard line break (trailing \, two spaces or <br>) often ends a bold
+            // pseudo-heading like "**Key findings**\": the line ends its block.
+            let hardBreak = !inCode && (raw.hasSuffix("  ") || line.contains(#/(\\|<br\s*/?>)$/#))
+            if hardBreak { line.replace(#/\s*(\\|<br\s*/?>)$/#, with: "") }
+            defer { if hardBreak { flush() } }
             if line.hasPrefix("```") || line.hasPrefix("~~~") {
                 flush()
                 if !inCode { blocks.append(language == "da" ? "Kodeblok sprunget over." : "Code block skipped.") }
