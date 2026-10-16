@@ -11,6 +11,11 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/MarkdownEditor "$APP/Contents/MacOS/"
 cp -R .build/release/MarkdownEditor_MarkdownEditor.bundle "$APP/Contents/Resources/"
 cp Info.plist "$APP/Contents/Info.plist"
+# Where this build came from, for Check for Updates (App/Updater.swift).
+if COMMIT=$(git rev-parse HEAD 2>/dev/null); then
+    plutil -replace NMSourceRepository -string "$PWD" "$APP/Contents/Info.plist"
+    plutil -replace NMSourceCommit -string "$COMMIT" "$APP/Contents/Info.plist"
+fi
 cp AppIcon.icns "$APP/Contents/Resources/"
 
 # Kokoro and Plapre voices: espeak-ng turns text into phonemes and llama.cpp runs

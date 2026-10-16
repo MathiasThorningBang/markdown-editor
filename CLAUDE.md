@@ -103,3 +103,9 @@ NM design system, applied in `Sources/MarkdownEditor/Web/editor.html`.
   Danish data into the app and re-signs them, and the app requires macOS 27 (Homebrew's
   builds do). Homebrew's llama.cpp is newer than the one Plapre Turbo was made with. Prebuilt espeak-ng binaries (pip wheels, sherpa-onnx) can't find their
   data on macOS 27. The default build has none of this.
+
+
+* Check for Updates (`App/Updater.swift`): `build.sh` stamps the clone's path and commit into
+  Info.plist (`NMSourceRepository`, `NMSourceCommit`). The app fetches `origin main` at launch
+  (quietly) and counts the commits it lacks; Update and Restart runs `git pull --ff-only` on
+  `main` only, the same build variant and the skills copy in a login shell, then reopens the app.

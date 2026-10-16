@@ -10,6 +10,14 @@ struct MarkdownEditorApp: App {
         }
         .defaultSize(width: 1050, height: 800)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    AppModel.shared.session.showSettings = true
+                    AppModel.shared.bringWindowFront()
+                    Updater.shared.check()
+                }
+                .disabled(!Updater.shared.canUpdate)
+            }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") {
                     AppModel.shared.session.showSettings = true
