@@ -7,6 +7,7 @@ struct MainWindowView: View {
     @ObservedObject var session = AppModel.shared.session
     @ObservedObject var theme = ThemeSettings.shared
     @ObservedObject var reader = ReadAloud.shared
+    @ObservedObject var updater = Updater.shared
     @Environment(\.openWindow) private var openWindow
     @Environment(\.colorScheme) private var colorScheme
 
@@ -50,9 +51,21 @@ struct MainWindowView: View {
                         Button {
                             session.showSettings.toggle()
                         } label: {
-                            Label("Settings", systemImage: session.showSettings ? "gearshape.fill" : "gearshape")
+                            Label {
+                                Text("Settings")
+                            } icon: {
+                                Image(systemName: session.showSettings ? "gearshape.fill" : "gearshape")
+                                    .overlay(alignment: .topTrailing) {
+                                        if updater.hasUpdate {
+                                            Circle()
+                                                .fill(theme.accent)
+                                                .frame(width: 6, height: 6)
+                                                .offset(x: 2, y: -1)
+                                        }
+                                    }
+                            }
                         }
-                        .help("Settings (⌘,)")
+                        .help(updater.hasUpdate ? "Settings (⌘,): an update is available" : "Settings (⌘,)")
                     }
                     if let doc = session.activeDoc, !doc.isHTML, !doc.isCanvas {
                         ToolbarItem {

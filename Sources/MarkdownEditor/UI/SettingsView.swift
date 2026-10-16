@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var theme = ThemeSettings.shared
     @ObservedObject var reader = ReadAloud.shared
+    @ObservedObject var updater = Updater.shared
     #if Kokoro
     @ObservedObject var kokoro = ModelDownload.kokoro
     @ObservedObject var plapre = ModelDownload.plapre
@@ -154,6 +155,17 @@ struct SettingsView: View {
                         }
                     }
                 }
+
+                Text("Updates")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.top, 32)
+                    .padding(.bottom, 12)
+
+                SettingsCard {
+                    SettingsRow("App") {
+                        UpdateStatus(updater: updater)
+                    }
+                }
             }
             .frame(maxWidth: 640)
             .padding(.horizontal, 32)
@@ -199,6 +211,46 @@ private struct SettingsCard<Content: View>: View {
                     .fill(NMColors.card)
                     .strokeBorder(NMColors.border, lineWidth: 1)
             )
+    }
+}
+
+/// The newest version from GitHub, built on this Mac like `./build.sh`.
+private struct UpdateStatus: View {
+    @ObservedObject var updater: Updater
+
+    var body: some View {
+        HStack(spacing: 10) {
+            switch updater.state {
+            case _ where !updater.canUpdate:
+                note("Built without its repo, so update with git pull and ./build.sh")
+            case .idle:
+                Button("Check for Updates") { updater.check() }
+            case .checking:
+                ProgressView().controlSize(.small)
+                note("Checking…")
+            case .upToDate:
+                note("Up to date")
+                Button("Check Again") { updater.check() }
+            case .available(let count):
+                note(count == 1 ? "1 new change" : "\(count) new changes")
+                Button("Update and Restart") { updater.update() }
+                    .help("Gets the newest version from GitHub and builds it on this Mac (a few minutes)")
+            case .updating:
+                ProgressView().controlSize(.small)
+                note("Building the new version, a few minutes…")
+            case .failed(let message):
+                note(message)
+                    .lineLimit(1)
+                    .help(message)
+                Button("Try Again") { updater.check() }
+            }
+        }
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 13))
+            .foregroundStyle(NMColors.secondaryForeground)
     }
 }
 

@@ -1,6 +1,6 @@
 # MarkdownEditor
 
-WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type and reload when an agent changes them on disk, and Cmd+click opens links — including local file paths. Everything runs locally, with no network apart from an optional voice download.
+WYSIWYG editor for `.md` files on macOS, in the spirit of Typora. The sidebar collects your folders as projects, files save automatically as you type and reload when an agent changes them on disk, and Cmd+click opens links — including local file paths. Everything runs locally, with no network apart from an optional voice download and the update check.
 
 Under the hood it's a SwiftUI app with a bundled [Milkdown Crepe](https://milkdown.dev/docs/guide/using-crepe) editor in a WKWebView. Styling follows the NM design system (DM Sans + Geist Mono) by default.
 
@@ -34,7 +34,7 @@ The speaker button in the toolbar reads the open `.md` file aloud from the sente
 
 The voice follows the document's language. Out of the box it's macOS' own Daniel (English) or Sara (Danish). Settings → Read aloud sets the speed and plays a sample. Apps can't use the Siri voices, so those aren't offered.
 
-Natural-sounding voices that run on your Mac come with an optional build (see [Installation](#natural-voices-optional)): Kokoro's George and Daniel for English, and Plapre Turbo's Mic and Nic for Danish. They're downloaded from Hugging Face in Settings (326 MB and 790 MB), the only time the app goes online.
+Natural-sounding voices that run on your Mac come with an optional build (see [Installation](#natural-voices-optional)): Kokoro's George and Daniel for English, and Plapre Turbo's Mic and Nic for Danish. They're downloaded from Hugging Face in Settings (326 MB and 790 MB).
 
 ## Why a markdown editor in 2026?
 
@@ -72,7 +72,9 @@ Then download the voices in Settings → Read aloud. The default `./build.sh` le
 
 ## Updating
 
-If you already have the app installed, this pulls the latest version and reinstalls it:
+In the app: **MarkdownEditor → Check for Updates…**, or Settings → Updates. The app also checks GitHub at launch and puts a dot on the Settings gear when there's something new. **Update and Restart** pulls `main` in the clone the app was built from, runs the same build (with or without the natural voices), updates the agent skills if you have them and reopens the app. It takes a few minutes, and the clone has to be on `main`.
+
+From Terminal, this does the same:
 
 ```sh
 cd markdown-editor

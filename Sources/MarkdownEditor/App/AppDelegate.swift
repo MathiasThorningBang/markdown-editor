@@ -4,6 +4,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         ThemeSettings.shared.applyAppearance()
+        Updater.shared.check(quietly: true)
     }
 
     /// LaunchServices entry point: Finder double-click, Open With, drag to Dock.
